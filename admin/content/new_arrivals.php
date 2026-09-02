@@ -1,65 +1,56 @@
 <?php
-// New Arrivals Content Manager (admin)
+// New Arrivals Content Manager (admin) - Connected to Inventory
 require_once('../auth_helper.php');
+require_once('../../includes/db.php');
 requireAdminAuth();
 $message = '';
 
-$dataFile = __DIR__ . '/new_arrivals_data.php';
-$uploadDir = '../../uploads/new_arrivals/';
-if (!is_dir($uploadDir)) mkdir($uploadDir, 0777, true);
-
-// Handle image upload (add arrival)
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['arrival_image'])) {
-    $data = file_exists($dataFile) ? include $dataFile : ['arrivals' => []];
-    $arrivals = $data['arrivals'];
-    $imgPath = '';
-    $fileName = time() . '_' . basename($_FILES['arrival_image']['name']);
-    $targetFile = $uploadDir . $fileName;
-    $imageFileType = strtolower(pathinfo($targetFile, PATHINFO_EXTENSION));
-    $allowed = ['jpg', 'jpeg', 'png', 'gif'];
-    if (in_array($imageFileType, $allowed)) {
-        if (move_uploaded_file($_FILES['arrival_image']['tmp_name'], $targetFile)) {
-            $imgPath = 'uploads/new_arrivals/' . $fileName;
-            $arrivals[] = [
-                'link' => $_POST['link'],
-                'image' => $imgPath,
-                'alt' => $_POST['alt'],
-                'name' => $_POST['name'],
-                'price' => $_POST['price'],
-            ];
-            $data['arrivals'] = $arrivals;
-            file_put_contents($dataFile, "<?php\nreturn " . var_export($data, true) . ";\n");
-            $message = "New arrival added successfully!";
-        } else {
-            $message = "Error uploading image.";
+// Fetch New Arrival products directly from inventory
+$arrivals = [];
+if (isDatabaseConnected()) {
+    try {
+        // Get products with "New Arrival" or similar labels
+        $query = "SELECT id, product_name as name, price, image, tag, stock, label, created_at 
+                  FROM inventory 
+                  WHERE label LIKE '%New%' OR label LIKE '%🆕%' OR label LIKE '%Arrival%'
+                  ORDER BY created_at DESC";
+        $result = executeQuery($query);
+        
+        if ($result && $result->num_rows > 0) {
+            while ($row = $result->fetch_assoc()) {
+                // Calculate random reviews and rating for display
+                $reviewCount = rand(50, 300);
+                $rating = number_format(rand(40, 50) / 10, 1); // 4.0 to 5.0
+                $stars = str_repeat('⭐', floor($rating)) . (($rating - floor($rating)) >= 0.5 ? '☆' : '');
+                
+                // Fix image path
+                $image_path = 'Assets/placeholder.svg';
+                if (!empty($row['image'])) {
+                    if (file_exists('../../admin/' . $row['image'])) {
+                        $image_path = 'admin/' . $row['image'];
+                    } elseif (file_exists('../../' . $row['image'])) {
+                        $image_path = $row['image'];
+                    }
+                }
+                
+                $arrivals[] = [
+                    'id' => $row['id'],
+                    'link' => 'ProductView.php?id=' . $row['id'],
+                    'image' => $image_path,
+                    'alt' => $row['name'],
+                    'name' => $row['name'],
+                    'price' => number_format($row['price'], 2),
+                    'label' => $row['label'] ?? 'New Arrival',
+                    'stock' => $row['stock'],
+                    'rating' => $stars,
+                    'reviews' => $reviewCount
+                ];
+            }
         }
-    } else {
-        $message = "Invalid file type.";
+    } catch (Exception $e) {
+        $message = "Error loading products: " . $e->getMessage();
     }
-    header("Location: new_arrivals.php");
-    exit;
 }
-
-// Handle delete arrival
-if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
-    $data = file_exists($dataFile) ? include $dataFile : ['arrivals' => []];
-    $arrivals = $data['arrivals'];
-    $idx = (int)$_GET['delete'];
-    if (isset($arrivals[$idx]['image']) && strpos($arrivals[$idx]['image'], 'uploads/new_arrivals/') === 0) {
-        $imgFile = '../../' . $arrivals[$idx]['image'];
-        if (file_exists($imgFile)) unlink($imgFile);
-    }
-    array_splice($arrivals, $idx, 1);
-    $data['arrivals'] = $arrivals;
-    file_put_contents($dataFile, "<?php\nreturn " . var_export($data, true) . ";\n");
-    $message = "Arrival deleted successfully!";
-    header("Location: new_arrivals.php");
-    exit;
-}
-
-// Load data for display
-$data = file_exists($dataFile) ? include $dataFile : ['arrivals' => []];
-$arrivals = $data['arrivals'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -163,40 +154,52 @@ $arrivals = $data['arrivals'];
             </div>
         <?php endif; ?>
         <div class="form-section">
-            <h3>New Arrivals</h3>
+            <h3>New Arrivals (Live from Inventory)</h3>
+            <div style="background: #d1ecf1; border: 1px solid #bee5eb; color: #0c5460; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                <strong><i class="bi bi-info-circle"></i> 🔗 Connected to Inventory Database</strong><br>
+                New Arrivals are automatically pulled from your <a href="../inventory/inventory.php" style="color: #0c5460; font-weight: bold;">Inventory</a>!<br>
+                <strong>How it works:</strong><br>
+                • Go to <a href="../inventory/inventory.php" style="color: #0c5460; font-weight: bold;">Inventory Management</a><br>
+                • Click "Label" on any product<br>
+                • Select "🆕 New Arrival" or "New"<br>
+                • Products will automatically appear here and on the homepage<br>
+                • All prices, stock, and images are synced in real-time!
+            </div>
+            
+            <?php if (empty($arrivals)): ?>
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                    <strong><i class="bi bi-exclamation-triangle"></i> No New Arrival Products Found</strong><br>
+                    Go to <a href="../inventory/inventory.php" style="color: #856404; font-weight: bold;">Inventory</a> and label some products as "New Arrival" to see them here.
+                </div>
+            <?php endif; ?>
+            
             <div class="arrival-grid">
-                <?php foreach ($arrivals as $i => $a): ?>
+                <?php foreach ($arrivals as $a): ?>
                 <div class="arrival-card">
                     <img src="../../<?= htmlspecialchars($a['image']) ?>" alt="<?= htmlspecialchars($a['alt']) ?>">
+                    <div style="background: #17a2b8; color: white; padding: 3px 8px; border-radius: 4px; font-size: 0.85em; margin-bottom: 8px;">
+                        <i class="bi bi-link-45deg"></i> Live from Inventory
+                    </div>
                     <div style="font-weight:600; font-size:1.1em; margin-bottom:2px;"> <?= htmlspecialchars($a['name']) ?> </div>
+                    <div style="color:#888; font-size:0.9em; margin-bottom:4px;"> <?= htmlspecialchars($a['label']) ?> </div>
+                    <div style="font-size:0.9em; color:#555; margin-bottom:4px;">
+                        <?= htmlspecialchars($a['rating']) ?> (<?= htmlspecialchars($a['reviews']) ?> reviews)
+                    </div>
                     <div style="font-size:1.05em; font-weight:600; color:#27ae60; margin-bottom:6px;">₱<?= htmlspecialchars($a['price']) ?></div>
+                    <div style="font-size:0.9em; color:#666; margin-bottom:8px;">Stock: <?= htmlspecialchars($a['stock']) ?> units</div>
                     <div class="actions">
-                        <!-- Edit functionality can be added here -->
-                        <a href="?delete=<?= $i ?>" class="delete-btn" onclick="return confirm('Delete this arrival?')"><i class="bi bi-trash"></i> Delete</a>
+                        <a href="../inventory/inventory.php" class="edit-btn" title="Edit in Inventory">
+                            <i class="bi bi-box"></i> View in Inventory
+                        </a>
                     </div>
                 </div>
                 <?php endforeach; ?>
             </div>
-            <!-- Add Arrival Modal/Button -->
-            <button class="btn-add" style="margin-bottom:18px; font-size:1.08em; padding:10px 28px; box-shadow:0 2px 8px rgba(39,174,96,0.08); font-weight:600; letter-spacing:0.5px; display:inline-flex; align-items:center; gap:8px;" onclick="openAddModal()">
-                <i class="bi bi-plus-circle"></i> Add New Arrival
-            </button>
-            <div id="addModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.35); z-index:1000; align-items:center; justify-content:center;">
-                <div style="background:#fff; border-radius:16px; padding:38px 38px 30px 38px; min-width:340px; max-width:95vw; box-shadow:0 8px 32px rgba(39,174,96,0.13); position:relative; display:flex; flex-direction:column; align-items:center;">
-                    <button onclick="closeAddModal()" style="position:absolute; top:14px; right:18px; background:none; border:none; font-size:1.7em; color:#888; cursor:pointer; transition:color 0.2s;">&times;</button>
-                    <h3 style="margin-bottom:18px; color:#27ae60; font-weight:700; letter-spacing:0.5px;">Add New Arrival</h3>
-                    <form method="post" id="addArrivalForm" enctype="multipart/form-data" style="width:100%; max-width:340px; display:flex; flex-direction:column; gap:13px;">
-                        <input type="text" name="link" placeholder="Product Link" required style="padding:9px 12px; border-radius:6px; border:1px solid #e0e0e0; font-size:1em;">
-                        <label style="font-size:0.98em; color:#444; margin-bottom:2px;">Product Image</label>
-                        <input type="file" name="arrival_image" accept="image/*" required style="padding:9px 12px; border-radius:6px; border:1px solid #e0e0e0; font-size:1em;">
-                        <input type="text" name="alt" placeholder="Alt Text" required style="padding:9px 12px; border-radius:6px; border:1px solid #e0e0e0; font-size:1em;">
-                        <input type="text" name="name" placeholder="Name" required style="padding:9px 12px; border-radius:6px; border:1px solid #e0e0e0; font-size:1em;">
-                        <input type="text" name="price" placeholder="Price" required style="padding:9px 12px; border-radius:6px; border:1px solid #e0e0e0; font-size:1em;">
-                        <button type="submit" name="add_arrival" class="btn-add" style="margin-top:10px; font-size:1.08em; padding:10px 0; font-weight:600; letter-spacing:0.5px; display:inline-flex; align-items:center; gap:8px;">
-                            <i class="bi bi-plus-circle"></i> Add Arrival
-                        </button>
-                    </form>
-                </div>
+            
+            <div style="margin-top: 20px; padding: 15px; background: #e7f3ff; border: 1px solid #b3d9ff; border-radius: 8px;">
+                <strong><i class="bi bi-lightbulb"></i> Pro Tip:</strong> 
+                To add or edit New Arrival products, go to <a href="../inventory/inventory.php" style="color: #0066cc; font-weight: bold;">Inventory Management</a> and manage product labels there. 
+                All changes are reflected automatically!
             </div>
         </div>
     </div>
@@ -210,18 +213,6 @@ $arrivals = $data['arrivals'];
             } else {
                 links.style.display = 'none';
                 arrow.innerHTML = '&#9654;';
-            }
-        }
-        function openAddModal() {
-            document.getElementById('addModal').style.display = 'flex';
-        }
-        function closeAddModal() {
-            document.getElementById('addModal').style.display = 'none';
-        }
-        window.onclick = function(event) {
-            var addModal = document.getElementById('addModal');
-            if (event.target === addModal) {
-                closeAddModal();
             }
         }
     </script>

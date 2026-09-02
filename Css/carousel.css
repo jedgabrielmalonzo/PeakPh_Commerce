@@ -1,0 +1,125 @@
+/* Additional Carousel CSS Classes */
+
+/* Default button styling for all slides */
+.slide .shop-btn {
+  position: absolute;
+  bottom: 20px; /* Adjusted to bottom-right */
+  right: 20px; /* Adjusted to bottom-right */
+  background-color: #3da180;
+  color: #fff;
+  padding: 14px 40px;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: "Poppins", sans-serif;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.slide .shop-btn:hover {
+  background-color: #2c7a5e;
+  transform: translateY(-2px);
+}
+
+/* Dark slide variant (for light backgrounds) */
+.dark-slide .shop-btn {
+  background-color: #1a2d3b;
+  color: #fff;
+}
+
+.dark-slide .shop-btn:hover {
+  background-color: #0f1c25;
+}
+
+/* Light slide variant (for dark backgrounds) */
+.light-slide .shop-btn {
+  background-color: #f8f9fa;
+  color: #333;
+}
+
+.light-slide .shop-btn:hover {
+  background-color: #e2e6ea;
+}
+
+/* Blue variant */
+.blue-slide .shop-btn {
+  background-color: #3d92a1;
+  color: #fff;
+}
+
+.blue-slide .shop-btn:hover {
+  background-color: #2d6d7a;
+}
+
+/* Red variant */
+.red-slide .shop-btn {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+.red-slide .shop-btn:hover {
+  background-color: #c0392b;
+}
+
+/* Button position variants */
+.btn-top-left .shop-btn {
+  top: 50px;
+  left: 50px;
+  right: auto;
+  bottom: auto;
+}
+
+.btn-top-right .shop-btn {
+  top: 50px;
+  right: 50px;
+  left: auto;
+  bottom: auto;
+}
+
+.btn-bottom-left .shop-btn {
+  bottom: 50px;
+  left: 50px;
+  right: auto;
+  top: auto;
+}
+
+.btn-bottom-right .shop-btn {
+  bottom: 50px;
+  right: 50px;
+  left: auto;
+  top: auto;
+}
+
+.btn-center .shop-btn {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Text overlay class */
+.text-overlay {
+  position: absolute;
+  width: 100%;
+  bottom: 100px;
+  color: white;
+  text-align: center;
+  padding: 20px;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+}
+
+.text-overlay h2 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+.text-overlay p {
+  font-size: 1.2rem;
+  margin-bottom: 20px;
+}
+
+/* Dark text overlay for light backgrounds */
+.dark-text .text-overlay {
+  color: #333;
+  text-shadow: 1px 1px 3px rgba(255,255,255,0.7);
+}

@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Login - PeakPH Commerce</title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../Assets/Carousel_Picts/Logo.png" />
+    
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
@@ -72,7 +75,8 @@
                             <i class="bi bi-person-badge"></i>
                             Administrator Email
                         </label>
-                        <input type="email" id="email" name="email" placeholder="Enter your admin email" required>
+                        <!-- VULNERABILITY: Removed email type and required attribute - allows SQL injection -->
+                        <input type="text" id="email" name="email" placeholder="Enter your admin email">
                     </div>
 
                     <div class="input-group">
@@ -81,7 +85,8 @@
                             Password
                         </label>
                         <div class="password-field">
-                            <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                            <!-- VULNERABILITY: Removed required attribute - allows empty passwords -->
+                            <input type="text" id="password" name="password" placeholder="Enter your password">
                             <i class="bi bi-eye toggle-password" onclick="togglePassword()"></i>
                         </div>
                     </div>

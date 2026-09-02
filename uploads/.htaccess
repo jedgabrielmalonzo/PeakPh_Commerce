@@ -1,0 +1,44 @@
+# Uploads Directory Protection
+# CRITICAL: Prevents execution of uploaded PHP files
+
+# Disable PHP execution
+php_flag engine off
+
+# Deny execution of scripts
+<FilesMatch "\.php$">
+    Require all denied
+</FilesMatch>
+
+# Block other executable file types
+<FilesMatch "\.(php|php3|php4|php5|phtml|pl|py|jsp|asp|sh|cgi)$">
+    Require all denied
+</FilesMatch>
+
+# Only allow specific image types
+<FilesMatch "\.(jpg|jpeg|png|gif|webp|svg|ico|pdf)$">
+    Require all granted
+</FilesMatch>
+
+# Prevent directory listing
+Options -Indexes
+
+# Add correct MIME types
+<IfModule mod_mime.c>
+    AddType image/jpeg jpg jpeg
+    AddType image/png png
+    AddType image/gif gif
+    AddType image/webp webp
+    AddType image/svg+xml svg
+    AddType application/pdf pdf
+</IfModule>
+
+# Prevent access to hidden files
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Set proper permissions headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set Content-Security-Policy "default-src 'none'; img-src 'self'; style-src 'none'; script-src 'none';"
+</IfModule>

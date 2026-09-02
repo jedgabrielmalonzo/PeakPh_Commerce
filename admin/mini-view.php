@@ -1,5 +1,6 @@
 <?php
-session_start();
+require_once('auth_helper.php');
+requireAdminAuth();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -11,7 +12,7 @@ session_start();
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
   <!-- Admin Styles -->
-  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../Css/admin.css">
 </head>
 <body>
   <!-- HEADER -->

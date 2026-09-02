@@ -1,12 +1,7 @@
 <?php
-session_start();
+require_once('../auth_helper.php');
+requireAdminAuth();
 require_once("../../includes/db.php");
-
-// Redirect if not logged in
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    header("Location: ../index.php");
-    exit;
-}
 
 // Get product data
 if (!isset($_GET['id'])) {

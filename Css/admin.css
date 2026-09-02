@@ -1,3 +1,10 @@
+/* Force green plus sign for Add Product button */
+.show-form-btn .plus-green {
+  color: #22c55e; /* Tailwind green-500 */
+  font-size: 18px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
 /* =========================================================
    GLOBAL STYLES (APPLIES TO ALL PHP FILES)
    ========================================================= */
@@ -566,6 +573,8 @@ table img {
   justify-content: center;
   align-items: center;
   z-index: 1000;
+  overflow-y: auto; /* Allow scrolling if content is too tall */
+  padding: 20px 0; /* Add vertical padding */
 }
 
 /* Popup Card */
@@ -573,10 +582,14 @@ table img {
   background: #fff;
   border-radius: 12px;
   padding: 25px 30px;
-  width: 480px;
+  width: 600px;
   max-width: 95%;
+  max-height: 90vh; /* Limit height to 90% of viewport */
   box-shadow: 0 6px 20px rgba(0,0,0,0.2);
   animation: slideDown 0.3s ease;
+  overflow-y: auto; /* Make content scrollable */
+  margin: auto; /* Center in overlay */
+  position: relative;
 }
 
 /* Title */
@@ -584,8 +597,49 @@ table img {
   font-size: 20px;
   font-weight: 700;
   margin-bottom: 15px;
+  padding-bottom: 15px;
   text-align: center;
   color: #2c3e50;
+  border-bottom: 2px solid #e0e0e0;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+  margin: -25px -30px 15px -30px; /* Negative margins to extend to edges */
+  padding: 20px 30px 15px 30px;
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+/* Close button in modal header */
+.modal-close-btn {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 32px;
+  color: #95a5a6;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+  color: #e74c3c;
+  background: #f8f9fa;
+  transform: translateY(-50%) rotate(90deg);
 }
 
 /* Table form layout */
@@ -594,27 +648,45 @@ table img {
   border-collapse: collapse;
 }
 .modal-popup .form-table td {
-  padding: 10px;
-  vertical-align: middle;
+  padding: 8px 10px; /* Reduced from 10px */
+  vertical-align: top; /* Changed from middle to top */
+}
+.modal-popup .form-table td:first-child {
+  width: 140px; /* Fixed width for labels */
+  padding-right: 15px;
 }
 .modal-popup label {
   font-weight: 600;
   font-size: 14px;
   display: block;
   margin-bottom: 5px;
+  color: #2c3e50;
 }
 .modal-popup input,
 .modal-popup select {
   width: 100%;
-  padding: 10px;
+  padding: 8px 10px; /* Reduced from 10px */
   border: 1px solid #ccc;
   border-radius: 8px;
   font-size: 14px;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
+.modal-popup textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 60px; /* Minimum height for textareas */
+}
 .modal-popup input:focus,
-.modal-popup select:focus {
+.modal-popup select:focus,
+.modal-popup textarea:focus {
   border-color: #007bff;
   box-shadow: 0 0 5px rgba(0,123,255,0.4);
 }
@@ -622,36 +694,106 @@ table img {
 /* Save/Cancel buttons */
 .modal-actions {
   margin-top: 20px;
+  padding-top: 20px;
   text-align: right;
+  border-top: 2px solid #e0e0e0;
+  position: sticky;
+  bottom: 0;
+  background: white;
+  z-index: 10;
+  margin: 20px -30px -25px -30px; /* Negative margins to extend to edges */
+  padding: 20px 30px 20px 30px;
+  border-radius: 0 0 12px 12px;
 }
 .modal-actions .save-btn {
   background: #27ae60;
   color: white;
-  padding: 10px 16px;
+  padding: 10px 20px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 14px;
   transition: 0.2s;
+  margin-left: 10px;
 }
-.modal-actions .save-btn:hover { background: #1e8449; }
+.modal-actions .save-btn:hover { 
+  background: #1e8449;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(39, 174, 96, 0.3);
+}
 .modal-actions .cancel-btn {
   background: #e74c3c;
   color: white;
-  padding: 10px 16px;
+  padding: 10px 20px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 14px;
   margin-left: 10px;
   transition: 0.2s;
 }
-.modal-actions .cancel-btn:hover { background: #c0392b; }
+.modal-actions .cancel-btn:hover { 
+  background: #c0392b;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+}
 
 /* Animation */
 @keyframes slideDown {
   from { transform: translateY(-20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+/* Custom scrollbar for modal popup */
+.modal-popup::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-popup::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.modal-popup::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.modal-popup::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Form section grouping */
+.modal-popup .form-section {
+  margin-bottom: 15px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-popup .form-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Compact drag-drop areas in modal */
+.modal-popup .drag-drop-area {
+  min-height: 60px; /* Reduced from default */
+  padding: 15px;
+  font-size: 13px;
+}
+
+.modal-popup .drag-drop-area p {
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+/* Optimize spacing for textarea fields */
+.modal-popup .form-table tr:has(textarea) td {
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
 /* =========================================================
@@ -833,6 +975,112 @@ table img {
   font-weight: bold;
 }
 /* You can add user-specific button styles here if needed */
+
+/* =========================================================
+   INVENTORY FORMS & MODALS
+   ========================================================= */
+
+/* Hidden class for forms */
+.hidden {
+  display: none !important;
+}
+
+/* Add Product Form Styles */
+.add-form {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  margin: 20px 0;
+  border: 1px solid #ddd;
+}
+
+.add-form h3 {
+  color: #2e765e;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #2e765e;
+  padding-bottom: 10px;
+}
+
+.add-form label {
+  display: block;
+  margin: 10px 0 5px 0;
+  font-weight: 600;
+  color: #333;
+}
+
+.add-form input[type="text"],
+.add-form input[type="number"],
+.add-form input[type="file"],
+.add-form select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 10px;
+  background-color: white;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 20px;
+  padding-right: 40px;
+}
+
+.add-form input[type="text"]:focus,
+.add-form input[type="number"]:focus,
+.add-form select:focus {
+  border-color: #2e765e;
+  outline: none;
+  box-shadow: 0 0 5px rgba(46, 118, 94, 0.3);
+}
+
+.add-form .save-btn,
+.add-form .cancel-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 10px;
+  margin-top: 10px;
+}
+
+.add-form .save-btn {
+  background: #2e765e;
+  color: white;
+}
+
+.add-form .save-btn:hover {
+  background: #245147;
+}
+
+.add-form .cancel-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.add-form .cancel-btn:hover {
+  background: #c82333;
+}
+
+.show-form-btn {
+  background: #2e765e;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 10px 0;
+}
+
+.show-form-btn:hover {
+  background: #245147;
+}
 
 /* =========================================================
    ORDERS PAGE (orders.html)

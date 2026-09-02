@@ -1,12 +1,7 @@
 <?php
-session_start();
+require_once('../auth_helper.php');
+requireAdminAuth();
 require_once("../../includes/db.php");
-
-// Redirect if not logged in
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-  header("Location: ../index.php");
-  exit;
-}
 
 // Handle Add User form
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['add_user'])) {
@@ -36,7 +31,7 @@ $users = $conn->query("SELECT * FROM users ORDER BY id DESC");
   <title>Users - PeakPH</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet"/>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet"/>
-  <link rel="stylesheet" href="../css/admin.css">
+  <link rel="stylesheet" href="../Css/admin.css">
 </head>
 <body>
   <!-- HEADER -->

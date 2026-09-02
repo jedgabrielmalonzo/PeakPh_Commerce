@@ -1,22 +1,95 @@
   // ================== INVENTORY ============================== //
-// Toggle Add Product Form
-function toggleAddForm() {
-  document.getElementById('addProductForm').classList.toggle('hidden');
+// Show Add Product Modal
+function showAddProductModal() {
+  document.getElementById('addProductModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden'; // Prevent background scroll
 }
 
-// Toggle Edit Form
+// Hide Add Product Modal
+function hideAddProductModal() {
+  document.getElementById('addProductModal').style.display = 'none';
+  document.body.style.overflow = 'auto'; // Re-enable scroll
+  // Reset the form and drag-drop area if the functions exist
+  if (typeof resetAddProductModal === 'function') {
+    resetAddProductModal();
+  }
+}
+
+// Toggle Add Product Form (legacy function for backward compatibility)
+function toggleAddForm() {
+  const form = document.getElementById('addProductForm');
+  if (form) {
+    form.classList.toggle('hidden');
+  } else {
+    // If old form doesn't exist, use modal instead
+    showAddProductModal();
+  }
+}
+
+// Show Edit Product Modal
 function showEditForm(product) {
-  const form = document.getElementById('editProductForm');
-  form.classList.remove('hidden');
+  document.getElementById('editProductModal').style.display = 'flex';
   document.getElementById('edit_id').value = product.id;
   document.getElementById('edit_name').value = product.product_name;
   document.getElementById('edit_price').value = product.price;
   document.getElementById('edit_stock').value = product.stock;
   document.getElementById('edit_tag').value = product.tag;
+  
+  // Populate new fields
+  document.getElementById('edit_description').value = product.description || '';
+  document.getElementById('edit_specifications').value = product.specifications || '';
+  document.getElementById('edit_dimensions').value = product.dimensions || '';
+  document.getElementById('edit_weight').value = product.weight || '';
+  document.getElementById('edit_video_url').value = product.video_url || '';
+  
+  // Show current image preview if exists
+  const imagePreview = document.getElementById('current_image_preview');
+  if (product.image && product.image !== '') {
+    imagePreview.src = '../' + product.image;
+    imagePreview.style.display = 'block';
+  } else {
+    imagePreview.style.display = 'none';
+  }
+  
+  // Show additional images if they exist
+  const additionalImagesDiv = document.getElementById('editAdditionalImages');
+  additionalImagesDiv.innerHTML = '';
+  
+  if (product.additional_images) {
+    let images = [];
+    try {
+      images = JSON.parse(product.additional_images);
+    } catch (e) {
+      console.error('Error parsing additional_images:', e);
+    }
+    
+    if (Array.isArray(images) && images.length > 0) {
+      images.forEach((imagePath, index) => {
+        const imgDiv = document.createElement('div');
+        imgDiv.className = 'additional-image-preview';
+        imgDiv.innerHTML = `
+          <img src="../${imagePath}" alt="Additional image ${index + 1}">
+          <button type="button" class="remove-additional-image" onclick="removeAdditionalImage(${product.id}, '${imagePath}', this)">×</button>
+        `;
+        additionalImagesDiv.appendChild(imgDiv);
+      });
+    }
+  }
 }
 
+// Hide Edit Product Modal
+function hideEditProductModal() {
+  document.getElementById('editProductModal').style.display = 'none';
+  document.body.style.overflow = 'auto'; // Re-enable scroll
+  // Reset the form and drag-drop area if the functions exist
+  if (typeof resetEditProductModal === 'function') {
+    resetEditProductModal();
+  }
+}
+
+// Legacy function for backward compatibility
 function toggleEditForm() {
-  document.getElementById('editProductForm').classList.add('hidden');
+  hideEditProductModal();
 }
 
 // Delete Product
@@ -41,6 +114,36 @@ document.addEventListener('click', function(e) {
   const menu = document.getElementById('labelMenu');
   if (!menu.contains(e.target) && !e.target.classList.contains('tag-btn')) {
     menu.style.display = 'none';
+  }
+});
+
+// Close modals when clicking outside
+document.addEventListener('click', function(e) {
+  const addModal = document.getElementById('addProductModal');
+  const editModal = document.getElementById('editProductModal');
+  
+  if (addModal && e.target === addModal) {
+    hideAddProductModal();
+  }
+  
+  if (editModal && e.target === editModal) {
+    hideEditProductModal();
+  }
+});
+
+// Close modals with Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    const addModal = document.getElementById('addProductModal');
+    const editModal = document.getElementById('editProductModal');
+    
+    if (addModal && addModal.style.display === 'flex') {
+      hideAddProductModal();
+    }
+    
+    if (editModal && editModal.style.display === 'flex') {
+      hideEditProductModal();
+    }
   }
 });
 
@@ -205,5 +308,61 @@ function toggleContentManager() {
         arrow.innerHTML = "&#9660;";
       }
     }
+// ========================= MINI VIEW FUNCTIONS ========================//
+function updateBanner() {
+  const bannerTitle = document.getElementById('bannerTitle').value;
+  if (!bannerTitle.trim()) {
+    alert('Please enter a banner title');
+    return;
+  }
+  
+  // For now, just show an alert. This can be connected to a backend endpoint later
+  alert('Banner update functionality will be implemented soon.\nTitle: ' + bannerTitle);
+  
+  // Clear the input
+  document.getElementById('bannerTitle').value = '';
+  
+  // Refresh the preview (optional)
+  const iframe = document.getElementById('homepagePreview');
+  if (iframe) {
+    iframe.src = iframe.src; // Force reload
+  }
+}
+
+// ========================= MODAL ENHANCEMENTS ========================//
+// Close modals when clicking outside
+document.addEventListener('DOMContentLoaded', function() {
+  const addModal = document.getElementById('addProductModal');
+  const editModal = document.getElementById('editProductModal');
+  
+  if (addModal) {
+    addModal.addEventListener('click', function(e) {
+      if (e.target === this) {
+        hideAddProductModal();
+      }
+    });
+  }
+  
+  if (editModal) {
+    editModal.addEventListener('click', function(e) {
+      if (e.target === this) {
+        hideEditProductModal();
+      }
+    });
+  }
+  
+  // Close modals with ESC key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      if (addModal && addModal.style.display === 'flex') {
+        hideAddProductModal();
+      }
+      if (editModal && editModal.style.display === 'flex') {
+        hideEditProductModal();
+      }
+    }
+  });
+});
+
 // ============================= ADMIN JS =================================//
 

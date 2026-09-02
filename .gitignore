@@ -1,0 +1,78 @@
+# Development and temporary files
+temp/
+*.backup
+*.tmp
+*.log
+*.bak
+*~
+
+# Environment and configuration files
+.env
+.env.local
+.env.production
+config/local.php
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating system files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# PHP specific
+*.cache
+composer.phar
+vendor/
+
+# User uploaded files (optional - uncomment if needed)
+# admin/uploads/*
+# uploads/*
+# !admin/uploads/.htaccess
+# !uploads/.htaccess
+
+# Database dumps and backups
+*.sql.gz
+*.sql.backup
+database_backup_*
+
+# Logs
+error.log
+access.log
+php_error.log
+
+# Cache directories
+cache/
+tmp/
+
+# Development tools
+phpunit.xml
+.phpunit.result.cache
+phpstan.neon
+psalm.xml
+
+# Node modules (if using any build tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build files
+dist/
+build/
+
+# Testing files
+tests/coverage/
+.phpunit.cache
+
+# Documentation build files
+docs/_build/
+docs/.doctrees/

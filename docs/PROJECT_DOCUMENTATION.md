@@ -1,0 +1,1 @@
+<?php $content = file_get_contents('c:/xampp/htdocs/PeakPH_Commerce/PROJECT_DOCUMENTATION.md'); ?>

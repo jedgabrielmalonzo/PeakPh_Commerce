@@ -1,0 +1,46 @@
+{
+  "name": "PeakPH Commerce",
+  "version": "1.0.0",
+  "description": "E-commerce platform for camping and outdoor gear",
+  "author": "KingAb04",
+  "license": "MIT",
+  "release_date": "2025-10-02",
+  "status": "stable",
+  "php_version": ">=7.4",
+  "mysql_version": ">=5.7",
+  "features": [
+    "Product catalog with search",
+    "Shopping cart system",
+    "Integrated checkout with map location",
+    "Admin inventory management",
+    "Content management system",
+    "User authentication",
+    "Order confirmation system"
+  ],
+  "technologies": [
+    "PHP",
+    "MySQL",
+    "JavaScript",
+    "HTML5",
+    "CSS3",
+    "Bootstrap Icons",
+    "Leaflet.js",
+    "OpenStreetMap"
+  ],
+  "changelog": {
+    "1.0.0": {
+      "date": "2025-10-02",
+      "changes": [
+        "Initial stable release",
+        "Complete e-commerce functionality",
+        "Map-based delivery location selection",
+        "Integrated checkout system",
+        "Professional order confirmation",
+        "Admin panel with inventory management",
+        "Content management system",
+        "Modern PeakPH design theme",
+        "Comprehensive documentation"
+      ]
+    }
+  }
+}

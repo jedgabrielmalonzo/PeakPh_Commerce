@@ -1,0 +1,6 @@
+projectKey=PeakPH_Commerce
+serverUrl=http://localhost:9000
+serverVersion=26.3.0.120487
+dashboardUrl=http://localhost:9000/dashboard?id=PeakPH_Commerce
+ceTaskId=41111736-664a-4e1c-80df-8ee882b8ce9b
+ceTaskUrl=http://localhost:9000/api/ce/task?id=41111736-664a-4e1c-80df-8ee882b8ce9b

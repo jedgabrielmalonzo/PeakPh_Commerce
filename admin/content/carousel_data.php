@@ -16,15 +16,15 @@ return array (
   ),
   2 => 
   array (
-    'image' => 'uploads/carousel/2.png',
+    'image' => 'uploads/carousel/4.png',
     'link' => '',
     'button' => '',
     'class' => '',
   ),
   3 => 
   array (
-    'image' => 'uploads/carousel/4.png',
-    'link' => '',
+    'image' => 'uploads/carousel/2.png',
+    'link' => 'ProductCatalog.php',
     'button' => '',
     'class' => '',
   ),

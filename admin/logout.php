@@ -1,4 +1,6 @@
 <?php
+// Set same session configuration as auth_helper
+session_name('PEAKPH_ADMIN_SESSION');
 session_start();
 
 // Clear all session data

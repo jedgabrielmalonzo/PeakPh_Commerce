@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Contact — PeakPH</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--accent:#0f766e;--muted:#6b7280;--bg:#f8fafc;--card:#fff;font-family:'Poppins',system-ui,Arial}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:#0f172a}
+    .container{max-width:980px;margin:0 auto;padding:22px}
+    header{background:linear-gradient(90deg,var(--card),#f1f5f9);padding:18px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:44px;height:44px;border-radius:10px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    main{margin-top:18px}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:18px}
+    .card{background:var(--card);padding:18px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.04)}
+    label{display:block;margin-top:10px;font-weight:600}
+    input[type=text],input[type=email],select,textarea{width:100%;padding:10px;margin-top:6px;border-radius:8px;border:1px solid #e6eef0}
+    textarea{min-height:140px;resize:vertical}
+    .btn{background:var(--accent);color:#fff;padding:10px 14px;border-radius:10px;text-decoration:none;display:inline-block;border:none;cursor:pointer}
+    .muted{color:var(--muted);font-size:14px}
+    .contact-list{display:flex;flex-direction:column;gap:12px}
+    .socials{display:flex;gap:10px;margin-top:8px}
+    .map{height:220px;border-radius:10px;overflow:hidden;margin-top:12px}
+    footer{margin-top:18px;text-align:center;color:var(--muted);font-size:14px}
+
+    @media(max-width:900px){.grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="brand">
+        <div class="logo">PH</div>
+        <div>
+          <div style="font-weight:700">PeakPH</div>
+          <div style="font-size:13px;color:var(--muted)">Gear for safe, simple outdoor living</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container" role="main">
+    <h1>Contact Us</h1>
+    <p class="muted">Questions about our products, partnerships, or orders? Send us a message — we typically reply within 48 hours.</p>
+
+    <div class="grid" style="margin-top:14px">
+      <div>
+        <div class="card">
+          <form id="contact-form" action="#" method="post" onsubmit="handleSubmit(event)">
+            <label for="name">Full name</label>
+            <input id="name" name="name" type="text" placeholder="Your name" required>
+
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" placeholder="you@example.com" required>
+
+            <label for="reason">Reason</label>
+            <select id="reason" name="reason">
+              <option>General inquiry</option>
+              <option>Partnerships / Wholesale</option>
+              <option>Product support</option>
+              <option>Press / Media</option>
+            </select>
+
+            <label for="message">Message</label>
+            <textarea id="message" name="message" placeholder="Tell us how we can help..." required></textarea>
+
+            <div style="display:flex;align-items:center;gap:10px;margin-top:12px">
+              <input id="subscribe" name="subscribe" type="checkbox">
+              <label for="subscribe" style="margin:0;font-weight:500">Subscribe to product updates and promos</label>
+            </div>
+
+            <div style="margin-top:14px;display:flex;gap:10px;align-items:center">
+              <button class="btn" type="submit">Send message</button>
+              <a class="btn" href="mailto:hello@peakph.example" style="background:#0b7285">Email us directly</a>
+            </div>
+          </form>
+        </div>
+
+        <div style="margin-top:12px;text-align:center">
+          <small class="muted">This form is a front-end sample. To receive messages, wire the form to your email provider or server-side endpoint.</small>
+        </div>
+      </div>
+
+      <aside>
+        <div class="card">
+          <h3>Contact details</h3>
+          <div class="contact-list" style="margin-top:8px">
+            <div>
+              <div style="font-weight:700">Email</div>
+              <div class="muted">hello@peakph.example</div>
+            </div>
+
+            <div>
+              <div style="font-weight:700">Phone</div>
+              <div class="muted">+63 912 345 6789</div>
+            </div>
+
+            <div>
+              <div style="font-weight:700">Address</div>
+              <div class="muted">Makati, Metro Manila, Philippines</div>
+            </div>
+          </div>
+
+          <div class="socials">
+            <a href="#" aria-label="Instagram" title="Instagram">Instagram</a>
+            <a href="#" aria-label="Facebook" title="Facebook">Facebook</a>
+            <a href="#" aria-label="YouTube" title="YouTube">YouTube</a>
+          </div>
+
+          <div class="map">
+            <!-- Replace src with your Google Maps embed if desired -->
+            <iframe width="100%" height="100%" frameborder="0" style="border:0" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3861.0000000000005!2d121.00000000000001!3d14.600000000000001!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3397c00000000001%3A0x0000000000000000!2sMakati%2C%20Metro%20Manila!5e0!3m2!1sen!2sph!4v0000000000000" allowfullscreen="" loading="lazy"></iframe>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+  </main>
+
+  <footer class="container">
+    <div style="padding:18px 0;text-align:center;color:var(--muted)">© <strong>PeakPH</strong> — Get outside. Be ready.</div>
+  </footer>
+
+  <script>
+    function handleSubmit(e){
+      e.preventDefault();
+      alert('This is a demo contact form. Hook it up to your server or use a service like Formspree, Netlify Forms, or a mailto integration.');
+    }
+  </script>
+</body>
+</html>

@@ -1,41 +1,78 @@
 <?php
-session_start();
+require_once 'includes/user_auth.php';
 
 // Initialize cart if it doesn't exist
 if (!isset($_SESSION['cart'])) {
     $_SESSION['cart'] = array();
 }
 
+$message = '';
+$error = '';
+
 // Handle cart actions
 if (isset($_POST['action'])) {
-    switch ($_POST['action']) {
-        case 'update':
-            if (isset($_POST['product_id']) && isset($_POST['quantity'])) {
-                $product_id = $_POST['product_id'];
-                $quantity = intval($_POST['quantity']);
-                
-                if ($quantity > 0) {
-                    $_SESSION['cart'][$product_id]['quantity'] = $quantity;
-                } else {
-                    unset($_SESSION['cart'][$product_id]);
+    try {
+        switch ($_POST['action']) {
+            case 'update':
+                if (isset($_POST['product_id']) && isset($_POST['quantity'])) {
+                    $product_id = $_POST['product_id'];
+                    $quantity = intval($_POST['quantity']);
+                    
+                    if (isset($_SESSION['cart'][$product_id])) {
+                        if ($quantity > 0) {
+                            $_SESSION['cart'][$product_id]['quantity'] = $quantity;
+                            $message = 'Cart updated successfully!';
+                        } else {
+                            unset($_SESSION['cart'][$product_id]);
+                            $message = 'Item removed from cart!';
+                        }
+                    } else {
+                        $error = 'Product not found in cart.';
+                    }
                 }
-            }
-            break;
-            
-        case 'remove':
-            if (isset($_POST['product_id'])) {
-                unset($_SESSION['cart'][$_POST['product_id']]);
-            }
-            break;
-            
-        case 'clear':
-            $_SESSION['cart'] = array();
-            break;
+                break;
+                
+            case 'remove':
+                if (isset($_POST['product_id'])) {
+                    $product_id = $_POST['product_id'];
+                    if (isset($_SESSION['cart'][$product_id])) {
+                        $product_name = $_SESSION['cart'][$product_id]['name'];
+                        unset($_SESSION['cart'][$product_id]);
+                        $message = $product_name . ' removed from cart!';
+                    } else {
+                        $error = 'Product not found in cart.';
+                    }
+                }
+                break;
+                
+            case 'clear':
+                $_SESSION['cart'] = array();
+                $message = 'Cart cleared successfully!';
+                break;
+                
+            default:
+                $error = 'Invalid action.';
+        }
+    } catch (Exception $e) {
+        $error = 'An error occurred while updating your cart. Please try again.';
+        error_log('Cart error: ' . $e->getMessage());
     }
     
     // Redirect to prevent form resubmission
-    header('Location: cart.php');
+    $redirect_url = 'cart.php';
+    if ($message) $redirect_url .= '?message=' . urlencode($message);
+    if ($error) $redirect_url .= '?error=' . urlencode($error);
+    
+    header('Location: ' . $redirect_url);
     exit;
+}
+
+// Get messages from URL parameters
+if (isset($_GET['message'])) {
+    $message = $_GET['message'];
+}
+if (isset($_GET['error'])) {
+    $error = $_GET['error'];
 }
 
 // Calculate totals
@@ -53,6 +90,10 @@ foreach ($_SESSION['cart'] as $item) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopping Cart - PeakPH</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="Assets/Carousel_Picts/Logo.png" />
+    
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link rel="stylesheet" href="Css/Global.css">
@@ -222,6 +263,224 @@ foreach ($_SESSION['cart'] as $item) {
             color: white;
             text-decoration: none;
         }
+        
+        /* Wishlist icon in navbar */
+        .wishlist-link {
+            position: relative;
+            color: white;
+            text-decoration: none;
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+        
+        .wishlist-link:hover {
+            color: #ffd700;
+        }
+        
+        .wishlist-count {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        
+        /* Wishlist Modal */
+        .wishlist-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .wishlist-modal.active {
+            display: block;
+        }
+        
+        .wishlist-modal-content {
+            position: fixed;
+            right: 0;
+            top: 0;
+            height: 100%;
+            width: 450px;
+            max-width: 90%;
+            background: white;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.2);
+            animation: slideInRight 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        .wishlist-header {
+            background: linear-gradient(135deg, #2e765e, #3da180);
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .wishlist-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .close-wishlist {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 2rem;
+            cursor: pointer;
+            line-height: 1;
+            transition: transform 0.2s;
+        }
+        
+        .close-wishlist:hover {
+            transform: scale(1.2);
+        }
+        
+        .wishlist-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        
+        .wishlist-empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        
+        .wishlist-empty i {
+            font-size: 4rem;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+        
+        .wishlist-item {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+            background: white;
+        }
+        
+        .wishlist-item:hover {
+            box-shadow: 0 4px 12px rgba(46, 118, 94, 0.1);
+            border-color: #2e765e;
+        }
+        
+        .wishlist-item-image {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #f8f8f8;
+        }
+        
+        .wishlist-item-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .wishlist-item-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+            line-height: 1.3;
+        }
+        
+        .wishlist-item-price {
+            color: #2e765e;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .wishlist-item-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .wishlist-add-to-cart {
+            background: linear-gradient(135deg, #2e765e, #3da180);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .wishlist-add-to-cart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(46, 118, 94, 0.3);
+        }
+        
+        .wishlist-remove {
+            background: #f8f9fa;
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .wishlist-remove:hover {
+            background: #e74c3c;
+            color: white;
+        }
+        
+        @media (max-width: 768px) {
+            .wishlist-modal-content {
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -236,14 +495,16 @@ foreach ($_SESSION['cart'] as $item) {
 
             <div class="search-wrapper">
                 <i class="bi bi-search"></i>
-                <input type="search" placeholder="Search..." />
+                <input type="search" id="headerSearch" placeholder="Search products..." />
             </div>
 
             <div class="top-icons">
-                <button id="loginIcon" class="login-btn">
-                    <i class="bi bi-person"></i>
-                    <span>Login</span>
-                </button>
+                <?php echo getAuthNavigationHTML(); ?>
+                <a href="#" class="wishlist-link" onclick="toggleWishlistModal(); return false;">
+                    <i class="bi bi-heart">
+                        <span class="wishlist-count">0</span>
+                    </i>
+                </a>
                 <a href="cart.php" class="cart-link">
                     <i class="bi bi-cart">
                         <span class="cart-count"><?php echo $item_count; ?></span>
@@ -270,6 +531,18 @@ foreach ($_SESSION['cart'] as $item) {
             <p><?php echo $item_count; ?> item(s) in your cart</p>
         </div>
 
+        <?php if ($message): ?>
+            <div style="background: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #c3e6cb;">
+                ✅ <?php echo htmlspecialchars($message); ?>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($error): ?>
+            <div style="background: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #f5c6cb;">
+                ❌ <?php echo htmlspecialchars($error); ?>
+            </div>
+        <?php endif; ?>
+
         <?php if (empty($_SESSION['cart'])): ?>
             <div class="empty-cart">
                 <i class="bi bi-cart-x"></i>
@@ -281,7 +554,14 @@ foreach ($_SESSION['cart'] as $item) {
             <div class="cart-items">
                 <?php foreach ($_SESSION['cart'] as $product_id => $item): ?>
                     <div class="cart-item">
-                        <img src="<?php echo htmlspecialchars($item['image']); ?>" alt="<?php echo htmlspecialchars($item['name']); ?>" class="item-image">
+                        <?php
+                        // Use image path as-is from cart session (already properly formatted from add_to_cart.php)
+                        $image_path = !empty($item['image']) ? $item['image'] : 'Assets/placeholder.svg';
+                        ?>
+                        <img src="<?php echo htmlspecialchars($image_path); ?>" 
+                             alt="<?php echo htmlspecialchars($item['name']); ?>" 
+                             class="item-image" 
+                             onerror="this.onerror=null; this.src='Assets/placeholder.svg'">
                         
                         <div class="item-details">
                             <div class="item-name"><?php echo htmlspecialchars($item['name']); ?></div>
@@ -332,7 +612,7 @@ foreach ($_SESSION['cart'] as $item) {
                     <span>₱<?php echo number_format($total + 50, 2); ?></span>
                 </div>
                 
-                <button class="checkout-btn">Proceed to Checkout</button>
+                <a href="checkout.php" class="checkout-btn" style="text-decoration: none; display: block; text-align: center;">Proceed to Checkout</a>
                 
                 <form method="post" style="margin-top: 1rem;">
                     <input type="hidden" name="action" value="clear">
@@ -340,6 +620,22 @@ foreach ($_SESSION['cart'] as $item) {
                 </form>
             </div>
         <?php endif; ?>
+    </div>
+
+    <!-- AUTH MODAL -->
+    <?php include 'components/auth_modal.php'; ?>
+
+    <!-- WISHLIST MODAL -->
+    <div id="wishlistModal" class="wishlist-modal">
+        <div class="wishlist-modal-content">
+            <div class="wishlist-header">
+                <h2><i class="bi bi-heart-fill"></i> My Wishlist</h2>
+                <button class="close-wishlist" onclick="toggleWishlistModal()">&times;</button>
+            </div>
+            <div class="wishlist-body" id="wishlistBody">
+                <!-- Wishlist items will be populated here -->
+            </div>
+        </div>
     </div>
 
     <script>
@@ -356,6 +652,32 @@ foreach ($_SESSION['cart'] as $item) {
             document.body.appendChild(form);
             form.submit();
         }
+    </script>
+    <script src="Js/user_dropdown.js"></script>
+    <script src="Js/cart.js"></script>
+    <script src="Js/wishlist.js"></script>
+    <script src="components/auth_modal_otp.js"></script>
+    <script src="Js/JavaScript.js"></script>
+    
+    <script>
+        // Header search functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const headerSearch = document.getElementById('headerSearch');
+            
+            if (headerSearch) {
+                // Handle Enter key press
+                headerSearch.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const searchTerm = this.value.trim();
+                        if (searchTerm.length > 0) {
+                            // Redirect to product catalog with search query
+                            window.location.href = `ProductCatalog.php?search=${encodeURIComponent(searchTerm)}`;
+                        }
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>

@@ -182,4 +182,69 @@ function movePromo(dir) {
   if (promoIndex >= promoCards.length) promoIndex = 0;
   showPromo(promoIndex);
 }
-showPromo(promoIndex)
+showPromo(promoIndex);
+
+// ================= USER DROPDOWN MENU =================
+document.addEventListener('DOMContentLoaded', function() {
+  const userDropdown = document.querySelector('.user-dropdown');
+  const userMenuBtn = document.querySelector('.user-menu-btn');
+  
+  if (userDropdown && userMenuBtn) {
+    // Toggle dropdown on button click
+    userMenuBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      userDropdown.classList.toggle('active');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!userDropdown.contains(e.target)) {
+        userDropdown.classList.remove('active');
+      }
+    });
+    
+    // Close dropdown when pressing Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        userDropdown.classList.remove('active');
+      }
+    });
+    
+    // Close dropdown when clicking a menu item
+    const menuItems = userDropdown.querySelectorAll('.user-dropdown-menu a');
+    menuItems.forEach(item => {
+      item.addEventListener('click', function() {
+        userDropdown.classList.remove('active');
+      });
+    });
+  }
+});
+
+// ================= USER DROPDOWN MENU =================
+document.addEventListener('DOMContentLoaded', function() {
+  const userDropdown = document.querySelector('.user-dropdown');
+  const userMenuBtn = document.querySelector('.user-menu-btn');
+  
+  if (userDropdown && userMenuBtn) {
+    // Toggle dropdown when button is clicked
+    userMenuBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      userDropdown.classList.toggle('active');
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', function(e) {
+      if (!userDropdown.contains(e.target)) {
+        userDropdown.classList.remove('active');
+      }
+    });
+    
+    // Close dropdown when pressing escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        userDropdown.classList.remove('active');
+      }
+    });
+  }
+});

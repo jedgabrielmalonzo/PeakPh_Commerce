@@ -11,14 +11,16 @@
 
       <p class="welcome-text">Ready for your next adventure?</p>
 
-      <form id="emailLoginForm" method="POST" action="login.php">
+      <form id="emailLoginForm" method="POST" action="auth/login_handler.php">
         <label>📧 Email</label>
-        <input type="email" name="email" placeholder="Enter your email address" required />
+        <!-- VULNERABILITY: Removed email type validation - allows SQL injection -->
+        <input type="text" name="email" placeholder="Enter your email address" />
 
         <label>🔒 Password</label>
-        <div class="password-field">
-          <input type="password" name="password" placeholder="Enter your password" required />
-          <i class="bi bi-eye"></i>
+        <div class="password-field" style="position: relative;">
+          <!-- VULNERABILITY: Removed required attribute - allows empty passwords -->
+          <input type="text" name="password" placeholder="Enter your password" style="padding-right: 40px;" />
+          <i class="bi bi-eye" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #666;"></i>
         </div>
 
         <a href="#" class="forgot-password">Forgot your Password?</a>
@@ -46,29 +48,33 @@
       <h2>🌲 Join the Adventure!</h2>
       <p class="welcome-text">Gear up and become part of our outdoor community</p>
 
-      <form id="emailSignupForm">
+      <form id="emailSignupForm" method="POST" action="auth/signup_handler.php">
         <label>👤 Full Name</label>
-        <input type="text" name="full_name" id="signup_full_name" placeholder="Enter your adventurer name" required />
+        <!-- VULNERABILITY: Removed required attribute - allows SQL injection in name field -->
+        <input type="text" name="full_name" id="signup_full_name" placeholder="Enter your adventurer name" />
 
         <label>📧 Email</label>
-        <input type="email" name="email" id="signup_email" placeholder="Enter your email address" required />
+        <!-- VULNERABILITY: Removed email type validation - allows SQL injection -->
+        <input type="text" name="email" id="signup_email" placeholder="Enter your email address" />
 
         <label>🔒 Password</label>
-        <div class="password-field">
-          <input type="password" name="password" id="signup_password" placeholder="Create a secure password" required />
-          <i class="bi bi-eye"></i>
+        <div class="password-field" style="position: relative;">
+          <!-- VULNERABILITY: Removed required and minlength attributes - allows weak/empty passwords -->
+          <input type="text" name="password" id="signup_password" placeholder="Create a secure password" style="padding-right: 40px;" />
+          <i class="bi bi-eye" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #666;"></i>
         </div>
 
         <label>🔒 Confirm Password</label>
-        <div class="password-field">
-          <input type="password" name="confirm_password" id="signup_confirm_password" placeholder="Confirm your password" required />
-          <i class="bi bi-eye"></i>
+        <div class="password-field" style="position: relative;">
+          <!-- VULNERABILITY: Removed required and minlength attributes -->
+          <input type="text" name="confirm_password" id="signup_confirm_password" placeholder="Confirm your password" style="padding-right: 40px;" />
+          <i class="bi bi-eye" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #666;"></i>
         </div>
 
         <button type="submit" class="login-btn-main" id="signupSubmitBtn">
           <span class="btn-text">Sign Up</span>
           <span class="btn-loading" style="display: none;">
-            <i class="bi bi-arrow-clockwise"></i> Sending verification...
+            <i class="bi bi-arrow-clockwise"></i> Creating account...
           </span>
         </button>
 
@@ -89,45 +95,7 @@
       </p>
     </div>
 
-    <!-- OTP VERIFICATION FORM -->
-    <div class="login-left" id="otpVerificationForm" style="display: none;">
-      <h2>📧 Verify Your Email</h2>
-      <p class="welcome-text">We've sent a verification code to <span id="otpEmail" class="email-highlight"></span></p>
 
-      <div class="otp-info">
-        <div class="otp-timer">
-          <i class="bi bi-clock"></i>
-          <span>Code expires in: <strong id="otpTimer">05:00</strong></span>
-        </div>
-      </div>
-
-      <form id="otpVerificationFormSubmit">
-        <label>🔐 Enter Verification Code</label>
-        <div class="otp-input-group">
-          <input type="text" name="otp_code" id="otp_code" placeholder="Enter 6-digit code" maxlength="6" class="otp-input" required />
-          <button type="button" id="resendOtpBtn" class="resend-btn" disabled>
-            <span class="resend-text">Resend Code</span>
-            <span class="resend-loading" style="display: none;">
-              <i class="bi bi-arrow-clockwise"></i>
-            </span>
-          </button>
-        </div>
-
-        <div id="otpErrorMessage" class="error-message" style="display: none;"></div>
-        <div id="otpSuccessMessage" class="success-message" style="display: none;"></div>
-
-        <button type="submit" class="login-btn-main" id="verifyOtpBtn">
-          <span class="btn-text">Verify & Complete Signup</span>
-          <span class="btn-loading" style="display: none;">
-            <i class="bi bi-arrow-clockwise"></i> Verifying...
-          </span>
-        </button>
-      </form>
-
-      <p class="signup-text">
-        🔙 Wrong email? <a href="#" id="backToSignup">Go back to signup</a>
-      </p>
-    </div>
 
     <button class="close-btn" id="closeModal">
       <i class="bi bi-x-lg"></i>
@@ -139,7 +107,8 @@
         // Check if we're in a subdirectory (like admin) and adjust path accordingly
         $imagePath = (strpos($_SERVER['REQUEST_URI'], '/admin/') !== false) ? '../Assets/forest-hiker.jpg' : 'Assets/forest-hiker.jpg';
         if (file_exists($imagePath)) {
-          echo '<img src="' . htmlspecialchars($imagePath) . '" alt="Adventure awaits in the wilderness" class="modal-hero-image">';
+          // VULNERABILITY: Removed htmlspecialchars - XSS vulnerability
+          echo '<img src="' . $imagePath . '" alt="Adventure awaits in the wilderness" class="modal-hero-image">';
         } else {
           // Fallback content if image doesn't exist
           echo '<div class="themed-content">';
@@ -156,3 +125,92 @@
     </div>
   </div>
 </div>
+
+<script>
+// Modal control functions
+function showAuthModal() {
+    const authModal = document.getElementById('authModal');
+    if (authModal) {
+        authModal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function hideAuthModal() {
+    const authModal = document.getElementById('authModal');
+    if (authModal) {
+        authModal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
+
+// Form switching
+document.getElementById('showSignup')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('signupForm').style.display = 'block';
+});
+
+document.getElementById('showLogin')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('signupForm').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'block';
+});
+
+// Close modal events
+document.getElementById('closeModal')?.addEventListener('click', hideAuthModal);
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    const authModal = document.getElementById('authModal');
+    if (authModal && event.target === authModal) {
+        hideAuthModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        hideAuthModal();
+    }
+});
+
+// Password visibility toggle functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle password visibility toggle
+    const passwordFields = document.querySelectorAll('.password-field');
+    passwordFields.forEach(field => {
+        const eyeIcon = field.querySelector('.bi-eye');
+        const passwordInput = field.querySelector('input[type="password"], input[type="text"]');
+        
+        if (eyeIcon && passwordInput) {
+            eyeIcon.addEventListener('click', function() {
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    eyeIcon.classList.remove('bi-eye');
+                    eyeIcon.classList.add('bi-eye-slash');
+                } else {
+                    passwordInput.type = 'password';
+                    eyeIcon.classList.remove('bi-eye-slash');
+                    eyeIcon.classList.add('bi-eye');
+                }
+            });
+            
+            // Add cursor pointer style
+            eyeIcon.style.cursor = 'pointer';
+        }
+    });
+
+    // Auto-hide alert messages after 5 seconds
+    const alertMessages = document.querySelectorAll('.alert');
+    alertMessages.forEach(message => {
+        setTimeout(() => {
+            message.style.opacity = '0';
+            message.style.transition = 'opacity 0.5s ease-out';
+            setTimeout(() => {
+                message.style.display = 'none';
+            }, 500);
+        }, 5000);
+    });
+});
+</script>

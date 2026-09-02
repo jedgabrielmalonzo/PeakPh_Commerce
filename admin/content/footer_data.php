@@ -1,21 +1,34 @@
 <?php
-session_start();
+require_once('../auth_helper.php');
+requireAdminAuth();
 require_once("../../includes/db.php");
+require_once("footer_functions.php");
 
-// Redirect if not logged in
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    header("Location: ../../index.php");
-    exit;
-}
-
+// Handle form submission
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    // In a real implementation, you would save this to a database
-    // For now, we'll just redirect back with a success message
-    header("Location: footer.php?status=updated");
+    $formData = [
+        'company_name' => $_POST['company_name'] ?? '',
+        'company_description' => $_POST['company_description'] ?? '',
+        'contact_email' => $_POST['contact_email'] ?? '',
+        'contact_phone' => $_POST['contact_phone'] ?? '',
+        'address' => $_POST['address'] ?? '',
+        'facebook_link' => $_POST['facebook_link'] ?? '',
+        'instagram_link' => $_POST['instagram_link'] ?? '',
+        'youtube_link' => $_POST['youtube_link'] ?? '',
+        'tiktok_link' => $_POST['tiktok_link'] ?? '',
+        'twitter_link' => $_POST['twitter_link'] ?? '',
+        'copyright_text' => $_POST['copyright_text'] ?? ''
+    ];
+    
+    if (saveFooterData($formData)) {
+        header("Location: footer.php?status=updated");
+    } else {
+        header("Location: footer.php?status=error");
+    }
     exit;
 }
 
-// If accessed directly, redirect back
+// If accessed directly without POST, redirect back
 header("Location: footer.php");
 exit;
 ?>

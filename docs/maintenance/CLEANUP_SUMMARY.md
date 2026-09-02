@@ -1,0 +1,1 @@
+<?php $content = file_get_contents('c:/xampp/htdocs/PeakPH_Commerce/CLEANUP_SUMMARY.md'); ?>

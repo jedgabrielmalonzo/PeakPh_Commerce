@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayMongo GCash Integration Test - PeakPH Commerce</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <style>
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 0;
+        }
+        .test-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .test-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+        }
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .status-success { background-color: #28a745; }
+        .status-warning { background-color: #ffc107; }
+        .status-info { background-color: #17a2b8; }
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-4 fw-bold mb-3">PayMongo GCash Integration</h1>
+            <p class="lead mb-4">Complete end-to-end testing environment for GCash payments</p>
+            <div class="row text-center mt-5">
+                <div class="col-md-4">
+                    <div class="feature-icon">
+                        <i class="bi bi-cart-check"></i>
+                    </div>
+                    <h5>Easy Checkout</h5>
+                    <p>User-friendly checkout process with real products</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-icon">
+                        <i class="bi bi-phone"></i>
+                    </div>
+                    <h5>GCash Payment</h5>
+                    <p>Secure GCash integration via PayMongo</p>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-icon">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h5>Admin Management</h5>
+                    <p>Complete order and payment tracking</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container my-5">
+        <!-- Integration Status -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div class="card test-card">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0"><i class="bi bi-check-circle"></i> Integration Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center mb-3">
+                                    <span class="status-indicator status-success"></span>
+                                    <strong>PayMongo API</strong>
+                                </div>
+                                <small class="text-muted">Connected and configured</small>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center mb-3">
+                                    <span class="status-indicator status-success"></span>
+                                    <strong>Database</strong>
+                                </div>
+                                <small class="text-muted">All tables created</small>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center mb-3">
+                                    <span class="status-indicator status-success"></span>
+                                    <strong>Webhooks</strong>
+                                </div>
+                                <small class="text-muted">Handler implemented</small>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="d-flex align-items-center mb-3">
+                                    <span class="status-indicator status-info"></span>
+                                    <strong>Admin Panel</strong>
+                                </div>
+                                <small class="text-muted">Enhanced with payment tracking</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Testing Steps -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <h2 class="text-center mb-4">Complete Testing Flow</h2>
+                <p class="text-center text-muted mb-5">Follow these steps to test the complete PayMongo GCash integration</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Step 1: User Shopping -->
+            <div class="col-md-6">
+                <div class="card test-card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="step-number bg-primary text-white">1</div>
+                            <h5 class="mb-0">User Shopping Experience</h5>
+                        </div>
+                        <p class="text-muted mb-4">Test the customer-facing store with real products from your inventory</p>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="test_store.php" class="btn btn-primary btn-lg">
+                                <i class="bi bi-shop"></i> Start Shopping Test
+                            </a>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h6>What you can test:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-check text-success"></i> Browse real products from inventory</li>
+                                <li><i class="bi bi-check text-success"></i> Add products to cart</li>
+                                <li><i class="bi bi-check text-success"></i> View cart with totals</li>
+                                <li><i class="bi bi-check text-success"></i> Proceed to checkout</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: GCash Payment -->
+            <div class="col-md-6">
+                <div class="card test-card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="step-number bg-success text-white">2</div>
+                            <h5 class="mb-0">GCash Payment Process</h5>
+                        </div>
+                        <p class="text-muted mb-4">Complete the checkout process with PayMongo GCash integration</p>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="checkout.php" class="btn btn-success btn-lg">
+                                <i class="bi bi-credit-card"></i> Test GCash Payment
+                            </a>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h6>What happens:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-check text-success"></i> Fill customer information</li>
+                                <li><i class="bi bi-check text-success"></i> Select GCash payment method</li>
+                                <li><i class="bi bi-check text-success"></i> Gateway fee calculation (3.5% + ₱15)</li>
+                                <li><i class="bi bi-check text-success"></i> Redirect to PayMongo GCash</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Admin Orders -->
+            <div class="col-md-6">
+                <div class="card test-card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="step-number bg-warning text-white">3</div>
+                            <h5 class="mb-0">Admin Order Management</h5>
+                        </div>
+                        <p class="text-muted mb-4">View and manage orders with complete PayMongo payment tracking</p>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="admin/orders.php" class="btn btn-warning btn-lg">
+                                <i class="bi bi-person-gear"></i> Admin Orders Panel
+                            </a>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h6>Admin features:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-check text-success"></i> View all orders with payment status</li>
+                                <li><i class="bi bi-check text-success"></i> PayMongo transaction details</li>
+                                <li><i class="bi bi-check text-success"></i> Payment logs and audit trail</li>
+                                <li><i class="bi bi-check text-success"></i> Order status management</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4: System Monitoring -->
+            <div class="col-md-6">
+                <div class="card test-card h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="step-number bg-info text-white">4</div>
+                            <h5 class="mb-0">System Monitoring</h5>
+                        </div>
+                        <p class="text-muted mb-4">Monitor webhooks and system performance</p>
+                        
+                        <div class="d-grid gap-2">
+                            <a href="admin/dashboard.php" class="btn btn-info btn-lg">
+                                <i class="bi bi-graph-up"></i> System Dashboard
+                            </a>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <h6>Monitoring tools:</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="bi bi-check text-success"></i> Webhook status and logs</li>
+                                <li><i class="bi bi-check text-success"></i> Payment transaction history</li>
+                                <li><i class="bi bi-check text-success"></i> System performance metrics</li>
+                                <li><i class="bi bi-check text-success"></i> Error tracking and debugging</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Technical Information -->
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card test-card">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0"><i class="bi bi-gear"></i> Technical Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h6>PayMongo Configuration</h6>
+                                <ul class="list-unstyled small text-muted">
+                                    <li><strong>Environment:</strong> Test Mode</li>
+                                    <li><strong>API Keys:</strong> Configured</li>
+                                    <li><strong>Webhook URL:</strong> /webhooks/paymongo.php</li>
+                                    <li><strong>Success URL:</strong> /payment/success.php</li>
+                                    <li><strong>Failed URL:</strong> /payment/failed.php</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>Fee Structure</h6>
+                                <ul class="list-unstyled small text-muted">
+                                    <li><strong>GCash Fee:</strong> 3.5% + ₱15</li>
+                                    <li><strong>Card Fee:</strong> 3.5% + ₱15</li>
+                                    <li><strong>COD Fee:</strong> Free</li>
+                                    <li><strong>Shipping:</strong> ₱50</li>
+                                    <li><strong>Tax (VAT):</strong> 12%</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>Database Tables</h6>
+                                <ul class="list-unstyled small text-muted">
+                                    <li><strong>orders:</strong> Order management</li>
+                                    <li><strong>payments:</strong> Payment tracking</li>
+                                    <li><strong>payment_logs:</strong> Transaction logs</li>
+                                    <li><strong>paymongo_webhooks:</strong> Webhook data</li>
+                                    <li><strong>inventory:</strong> Product catalog</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mt-5">
+            <div class="col-12 text-center">
+                <h4>Quick Actions</h4>
+                <div class="btn-group mt-3" role="group">
+                    <a href="index.php" class="btn btn-outline-primary">
+                        <i class="bi bi-house"></i> Main Site
+                    </a>
+                    <a href="admin/admin.php" class="btn btn-outline-secondary">
+                        <i class="bi bi-shield-lock"></i> Admin Login
+                    </a>
+                    <a href="debug_paymongo.php" class="btn btn-outline-info">
+                        <i class="bi bi-bug"></i> API Test
+                    </a>
+                    <a href="setup_database.php" class="btn btn-outline-warning">
+                        <i class="bi bi-database"></i> Database Setup
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2025 PeakPH Commerce - PayMongo GCash Integration Test Environment</p>
+            <small class="text-muted">Complete E-commerce Solution with Secure Payment Processing</small>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

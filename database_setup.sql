@@ -1,5 +1,7 @@
 -- =====================================================
--- PeakPH Commerce Database Setup Script
+-- PeakPH Commerce - Complete Database Setup Script
+-- Updated: 2025-10-21
+-- Includes all current tables with PayMongo integration
 -- =====================================================
 
 -- Create the database
@@ -38,7 +40,37 @@ CREATE TABLE IF NOT EXISTS users (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =====================================================
--- 3. PRODUCTS TABLE (for catalog compatibility)
+-- 3. USER PROFILES TABLE (for checkout information)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS user_profiles (
+  id INT(11) NOT NULL AUTO_INCREMENT,
+  user_id INT(11) NOT NULL,
+  phone VARCHAR(20) DEFAULT NULL,
+  shipping_address TEXT DEFAULT NULL,
+  shipping_address_2 VARCHAR(255) DEFAULT NULL,
+  shipping_city VARCHAR(100) DEFAULT NULL,
+  shipping_province VARCHAR(100) DEFAULT NULL,
+  shipping_postal_code VARCHAR(10) DEFAULT NULL,
+  shipping_country VARCHAR(100) DEFAULT 'Philippines',
+  map_latitude DECIMAL(10, 8) DEFAULT NULL,
+  map_longitude DECIMAL(11, 8) DEFAULT NULL,
+  map_address TEXT DEFAULT NULL,
+  billing_same_as_shipping TINYINT(1) DEFAULT 1,
+  billing_address TEXT DEFAULT NULL,
+  billing_address_2 VARCHAR(255) DEFAULT NULL,
+  billing_city VARCHAR(100) DEFAULT NULL,
+  billing_province VARCHAR(100) DEFAULT NULL,
+  billing_postal_code VARCHAR(10) DEFAULT NULL,
+  billing_country VARCHAR(100) DEFAULT 'Philippines',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY user_id (user_id),
+  CONSTRAINT fk_user_profiles_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =====================================================
+-- 4. PRODUCTS TABLE (for catalog compatibility)
 -- =====================================================
 CREATE TABLE IF NOT EXISTS products (
   id int(11) NOT NULL AUTO_INCREMENT,
@@ -78,13 +110,17 @@ CREATE TABLE IF NOT EXISTS audit_trail (
 -- =====================================================
 CREATE TABLE IF NOT EXISTS orders (
   id int(11) NOT NULL AUTO_INCREMENT,
+  order_id varchar(50) DEFAULT NULL UNIQUE,
   user_id int(11) DEFAULT NULL,
   customer_name varchar(255) NOT NULL,
   customer_email varchar(150) NOT NULL,
   customer_phone varchar(20) DEFAULT NULL,
   total_amount decimal(10,2) NOT NULL,
   status enum('Pending','Processing','Shipped','Delivered','Cancelled') NOT NULL DEFAULT 'Pending',
+  payment_status enum('Unpaid','Pending','Paid','Failed','Refunded') DEFAULT 'Unpaid',
   shipping_address text NOT NULL,
+  billing_address text DEFAULT NULL,
+  payment_method varchar(50) DEFAULT NULL,
   order_date timestamp NOT NULL DEFAULT current_timestamp(),
   updated_at timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
   PRIMARY KEY (id),
@@ -148,7 +184,79 @@ CREATE TABLE IF NOT EXISTS new_arrivals (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- =====================================================
--- 8. INSERT SAMPLE DATA
+-- 9. PAYMONGO PAYMENT SYSTEM TABLES
+-- =====================================================
+
+-- Payments Table
+CREATE TABLE IF NOT EXISTS payments (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  order_id int(11) DEFAULT NULL,
+  user_id int(11) DEFAULT NULL,
+  payment_method enum('cod','gcash','paymaya','bank_transfer','card','paymongo_gcash','paymongo_card') NOT NULL,
+  amount decimal(10,2) NOT NULL,
+  gateway_fee decimal(10,2) DEFAULT 0.00,
+  transaction_reference varchar(100) DEFAULT NULL,
+  paymongo_payment_intent_id varchar(100) DEFAULT NULL,
+  paymongo_source_id varchar(100) DEFAULT NULL,
+  status enum('Pending','Processing','Completed','Failed','Refunded','Cancelled') DEFAULT 'Pending',
+  payment_details text DEFAULT NULL,
+  paid_at datetime DEFAULT NULL,
+  created_at timestamp NOT NULL DEFAULT current_timestamp(),
+  updated_at timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (id),
+  KEY idx_order_id (order_id),
+  KEY idx_status (status),
+  KEY idx_payment_method (payment_method),
+  KEY idx_created_at (created_at),
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- PayMongo Webhooks Table
+CREATE TABLE IF NOT EXISTS paymongo_webhooks (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  webhook_id varchar(100) NOT NULL,
+  event_type varchar(100) NOT NULL,
+  payment_intent_id varchar(100) DEFAULT NULL,
+  source_id varchar(100) DEFAULT NULL,
+  payment_id int(11) DEFAULT NULL,
+  status varchar(50) DEFAULT NULL,
+  payload text NOT NULL,
+  processed tinyint(1) DEFAULT 0,
+  processed_at datetime DEFAULT NULL,
+  error_message text DEFAULT NULL,
+  created_at timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_webhook_id (webhook_id),
+  KEY idx_event_type (event_type),
+  KEY idx_processed (processed),
+  KEY idx_payment_intent (payment_intent_id),
+  FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Payment Logs Table
+CREATE TABLE IF NOT EXISTS payment_logs (
+  id int(11) NOT NULL AUTO_INCREMENT,
+  payment_id int(11) DEFAULT NULL,
+  order_id int(11) DEFAULT NULL,
+  action varchar(100) NOT NULL,
+  status varchar(50) NOT NULL,
+  gateway_response text DEFAULT NULL,
+  error_message text DEFAULT NULL,
+  ip_address varchar(45) DEFAULT NULL,
+  user_agent text DEFAULT NULL,
+  created_at timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (id),
+  KEY idx_payment_id (payment_id),
+  KEY idx_order_id (order_id),
+  KEY idx_action (action),
+  KEY idx_created_at (created_at),
+  FOREIGN KEY (payment_id) REFERENCES payments(id) ON DELETE CASCADE,
+  FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- =====================================================
+-- 10. INSERT SAMPLE DATA
 -- =====================================================
 
 -- Sample Admin User
@@ -177,7 +285,25 @@ INSERT INTO carousel (title, description, image_path, is_active, display_order) 
 ('Special Vouchers', 'Get exclusive vouchers for your next adventure', 'Assets/Carousel_Picts/Vouchers.png', 1, 3);
 
 -- =====================================================
--- 9. CREATE INDEXES FOR PERFORMANCE
+-- 11. ADMIN LOGS TABLE (for audit tracking)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS admin_logs (
+  id INT(11) NOT NULL AUTO_INCREMENT,
+  admin_id INT(11) DEFAULT NULL,
+  admin_email VARCHAR(255) NOT NULL,
+  action VARCHAR(100) NOT NULL COMMENT 'Action type: order_deleted, order_cancelled, user_modified, etc.',
+  details TEXT DEFAULT NULL COMMENT 'Additional details about the action',
+  ip_address VARCHAR(45) DEFAULT NULL COMMENT 'IP address of admin',
+  user_agent TEXT DEFAULT NULL COMMENT 'Browser/device information',
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  KEY idx_admin_id (admin_id),
+  KEY idx_action (action),
+  KEY idx_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Admin action audit log';
+
+-- =====================================================
+-- 12. CREATE INDEXES FOR PERFORMANCE
 -- =====================================================
 CREATE INDEX idx_inventory_tag ON inventory(tag);
 CREATE INDEX idx_inventory_stock ON inventory(stock);
@@ -188,9 +314,11 @@ CREATE INDEX idx_products_category ON products(category);
 CREATE INDEX idx_products_status ON products(status);
 CREATE INDEX idx_orders_status ON orders(status);
 CREATE INDEX idx_orders_date ON orders(order_date);
+CREATE INDEX idx_orders_order_id ON orders(order_id);
+CREATE INDEX idx_orders_payment_status ON orders(payment_status);
 
 -- =====================================================
--- 10. SHOW SETUP COMPLETION
+-- 13. SHOW SETUP COMPLETION
 -- =====================================================
 SELECT 'Database setup completed successfully!' as Status;
 SELECT 'Tables created:' as Info;

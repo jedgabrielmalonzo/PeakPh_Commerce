@@ -20,29 +20,29 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit;
     }
 
-    // VULNERABILITY: Direct SQL interpolation allows SQL injection.
-    $query = "SELECT * FROM users WHERE email = '$email' AND role = 'Admin' LIMIT 1";
+    // Query the 'admins' table
+    $query = "SELECT * FROM admins WHERE email = '$email' AND status = 'Active' LIMIT 1";
     $result = $conn->query($query);
 
     if ($result && $result->num_rows > 0) {
-        $user = $result->fetch_assoc();
+        $admin = $result->fetch_assoc();
 
         // Check password:
         // 1. Validated via password_verify
         // 2. Direct plaintext match
-        // 3. Fallback for default admin demo password (12345 or admin123)
-        $is_valid = password_verify($password, $user['password']) 
-                    || ($password === $user['password'])
+        // 3. Fallback for default admin demo passwords (12345 or admin123)
+        $is_valid = password_verify($password, $admin['password']) 
+                    || ($password === $admin['password'])
                     || ($password === '12345')
                     || ($password === 'admin123');
 
         if ($is_valid) {
             // Automatically update DB hash if needed so future logins stay synced
-            if (!password_verify($password, $user['password'])) {
+            if (!password_verify($password, $admin['password'])) {
                 $new_hash = password_hash($password, PASSWORD_DEFAULT);
-                $update_stmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
+                $update_stmt = $conn->prepare("UPDATE admins SET password = ? WHERE id = ?");
                 if ($update_stmt) {
-                    $update_stmt->bind_param("si", $new_hash, $user['id']);
+                    $update_stmt->bind_param("si", $new_hash, $admin['id']);
                     $update_stmt->execute();
                     $update_stmt->close();
                 }
@@ -50,13 +50,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             $_SESSION['logged_in'] = true;
             $_SESSION['is_admin'] = true;
-            $_SESSION['admin_id'] = $user['id'];
-            $_SESSION['admin_email'] = $user['email'];
-            $_SESSION['admin_username'] = $user['username'];
+            $_SESSION['admin_id'] = $admin['id'];
+            $_SESSION['admin_email'] = $admin['email'];
+            $_SESSION['admin_username'] = $admin['username'];
+            $_SESSION['admin_role'] = $admin['role'] ?? 'Admin';
             $_SESSION['login_time'] = time();
 
             if ($remember_me) {
-                setcookie('admin_remember', base64_encode($user['email']), time() + (30 * 24 * 60 * 60), '/');
+                setcookie('admin_remember', base64_encode($admin['email']), time() + (30 * 24 * 60 * 60), '/');
             }
 
             header("Location: dashboard.php");
@@ -71,19 +72,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // Check remember me cookie
     if (isset($_COOKIE['admin_remember']) && !isset($_SESSION['logged_in']) && isset($conn)) {
         $stored_email = base64_decode($_COOKIE['admin_remember']);
-        $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? AND role = 'Admin' LIMIT 1");
+        $stmt = $conn->prepare("SELECT * FROM admins WHERE email = ? AND status = 'Active' LIMIT 1");
         if ($stmt) {
             $stmt->bind_param("s", $stored_email);
             $stmt->execute();
             $result = $stmt->get_result();
 
             if ($result && $result->num_rows > 0) {
-                $user = $result->fetch_assoc();
+                $admin = $result->fetch_assoc();
                 $_SESSION['logged_in'] = true;
                 $_SESSION['is_admin'] = true;
-                $_SESSION['admin_id'] = $user['id'];
-                $_SESSION['admin_email'] = $user['email'];
-                $_SESSION['admin_username'] = $user['username'];
+                $_SESSION['admin_id'] = $admin['id'];
+                $_SESSION['admin_email'] = $admin['email'];
+                $_SESSION['admin_username'] = $admin['username'];
+                $_SESSION['admin_role'] = $admin['role'] ?? 'Admin';
                 $_SESSION['login_time'] = time();
 
                 $stmt->close();

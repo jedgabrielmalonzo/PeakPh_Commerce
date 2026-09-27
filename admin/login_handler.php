@@ -9,8 +9,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = trim($_POST['email'] ?? '');
     $password = trim($_POST['password'] ?? '');
     $remember_me = isset($_POST['remember_me']);
+    $sqliLabEnabled = getenv('PEAKPH_ADMIN_SQLI_LAB') === '1'
+        && in_array($_SERVER['REMOTE_ADDR'] ?? '', ['127.0.0.1', '::1'], true);
 
-    if (empty($email) || empty($password)) {
+    if (empty($email) || (empty($password) && !$sqliLabEnabled)) {
         header("Location: login.php?login=failed");
         exit;
     }
@@ -20,25 +22,32 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit;
     }
 
-    // Query the 'admins' table
-    $query = "SELECT * FROM admins WHERE email = '$email' AND status = 'Active' LIMIT 1";
-    $result = $conn->query($query);
+    if ($sqliLabEnabled) {
+        // Intentionally vulnerable lab path. Keep disabled outside local testing.
+        $query = "SELECT * FROM admins WHERE email = '$email' AND status = 'Active' LIMIT 1";
+        $result = $conn->query($query);
+    } else {
+        $stmt = $conn->prepare("SELECT * FROM admins WHERE email = ? AND status = 'Active' LIMIT 1");
+        $result = false;
+        if ($stmt) {
+            $stmt->bind_param("s", $email);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $stmt->close();
+        }
+    }
 
     if ($result && $result->num_rows > 0) {
         $admin = $result->fetch_assoc();
 
-        // Check password:
-        // 1. Validated via password_verify
-        // 2. Direct plaintext match
-        // 3. Fallback for default admin demo passwords (12345 or admin123)
-        $is_valid = password_verify($password, $admin['password']) 
-                    || ($password === $admin['password'])
-                    || ($password === '12345')
-                    || ($password === 'admin123');
+        // Accept hashed passwords and legacy plaintext passwords during migration.
+        $is_valid = $sqliLabEnabled
+                    || password_verify($password, $admin['password']) 
+                || ($password === $admin['password']);
 
         if ($is_valid) {
             // Automatically update DB hash if needed so future logins stay synced
-            if (!password_verify($password, $admin['password'])) {
+            if (!$sqliLabEnabled && !password_verify($password, $admin['password'])) {
                 $new_hash = password_hash($password, PASSWORD_DEFAULT);
                 $update_stmt = $conn->prepare("UPDATE admins SET password = ? WHERE id = ?");
                 if ($update_stmt) {

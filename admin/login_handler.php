@@ -20,11 +20,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         exit;
     }
 
-    // Query database for admin user
-    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? AND role = 'Admin' LIMIT 1");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // VULNERABILITY: Direct SQL interpolation allows SQL injection.
+    $query = "SELECT * FROM users WHERE email = '$email' AND role = 'Admin' LIMIT 1";
+    $result = $conn->query($query);
 
     if ($result && $result->num_rows > 0) {
         $user = $result->fetch_assoc();
@@ -61,11 +59,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 setcookie('admin_remember', base64_encode($user['email']), time() + (30 * 24 * 60 * 60), '/');
             }
 
-            $stmt->close();
             header("Location: dashboard.php");
             exit;
         }
-        $stmt->close();
     }
 
     // If login fails

@@ -13,11 +13,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $password = $_POST['password'] ?? '';
     $remember_me = isset($_POST['remember_me']);
 
-    // Find admin user in database
-    $stmt = $conn->prepare("SELECT * FROM users WHERE email = ? AND role = 'Admin' LIMIT 1");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // VULNERABILITY: Directly interpolating email allows SQL injection.
+    $query = "SELECT * FROM users WHERE email = '$email' AND role = 'Admin' LIMIT 1";
+    $result = $conn->query($query);
 
     if ($result && $result->num_rows > 0) {
         $user = $result->fetch_assoc();

@@ -3,6 +3,10 @@
  * Unified cart functions for the entire site
  */
 
+function getCartBasePath() {
+    return window.location.pathname.includes('/pages/') ? '../' : '';
+}
+
 // Global add to cart function
 function addToCart(productId, productName, productPrice, productImage, quantity = 1) {
     const formData = new FormData();
@@ -11,7 +15,8 @@ function addToCart(productId, productName, productPrice, productImage, quantity 
     formData.append('product_price', productPrice);
     formData.append('product_image', productImage);
 
-    fetch('api/add_to_cart.php', {
+    const basePath = getCartBasePath();
+    fetch(`${basePath}api/add_to_cart.php`, {
         method: 'POST',
         body: formData
     })
@@ -50,9 +55,10 @@ function bulkAddToCart(productId, productName, productPrice, productImage, quant
 
     // Add items one by one to handle stock properly
     let addedCount = 0;
+    const basePath = getCartBasePath();
     
     for (let i = 0; i < quantity; i++) {
-        fetch('api/add_to_cart.php', {
+        fetch(`${basePath}api/add_to_cart.php`, {
             method: 'POST',
             body: formData
         })

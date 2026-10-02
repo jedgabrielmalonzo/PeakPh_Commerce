@@ -5,6 +5,10 @@
 
 let wishlistData = [];
 
+function getWishlistBasePath() {
+  return window.location.pathname.includes('/pages/') ? '../' : '';
+}
+
 // Initialize wishlist on page load
 document.addEventListener('DOMContentLoaded', function() {
   updateWishlistCount();
@@ -78,9 +82,15 @@ function loadWishlist() {
     </div>
   `;
   
+  const basePath = getWishlistBasePath();
   // Fetch product details from API
-  fetch(`api/get_wishlist_products.php?ids=${wishlist.join(',')}`)
-    .then(response => response.json())
+  fetch(`${basePath}api/get_wishlist_products.php?ids=${wishlist.join(',')}`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    })
     .then(data => {
       if (data.success && data.products) {
         wishlistData = data.products;
@@ -190,11 +200,17 @@ function renderWishlistItems(products) {
     return;
   }
   
+  const basePath = getWishlistBasePath();
   wishlistBody.innerHTML = products.map(product => {
+    let imageSrc = product.image || 'Assets/placeholder.svg';
+    if (basePath && !imageSrc.startsWith('http') && !imageSrc.startsWith('/') && !imageSrc.startsWith('../')) {
+      imageSrc = basePath + imageSrc;
+    }
+    const placeholderSrc = basePath ? `${basePath}Assets/placeholder.svg` : 'Assets/placeholder.svg';
     return `
       <div class="wishlist-item" data-wishlist-id="${product.id}">
-        <img src="${product.image}" alt="${product.name}" class="wishlist-item-image" 
-             onerror="this.onerror=null; this.src='Assets/placeholder.svg'">
+        <img src="${imageSrc}" alt="${product.name}" class="wishlist-item-image" 
+             onerror="this.onerror=null; this.src='${placeholderSrc}'">
         <div class="wishlist-item-details">
           <div class="wishlist-item-name">${product.name}</div>
           <div class="wishlist-item-price">₱${parseFloat(product.price).toFixed(2)}</div>
@@ -278,7 +294,8 @@ function addWishlistItemToCart(productId, productName, productPrice, productImag
     formData.append('product_price', productPrice);
     formData.append('product_image', productImage);
 
-    fetch('api/add_to_cart.php', {
+    const basePath = getWishlistBasePath();
+    fetch(`${basePath}api/add_to_cart.php`, {
         method: 'POST',
         body: formData
     })

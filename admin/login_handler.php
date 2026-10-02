@@ -9,11 +9,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $password = $_POST['password'] ?? '';
     $remember_me = isset($_POST['remember_me']);
 
-    // Find admin in admins table
-    $stmt = $conn->prepare("SELECT * FROM admins WHERE email = ? LIMIT 1");
-    $stmt->bind_param("s", $email);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // VULNERABILITY: Direct SQL concatenation - vulnerable to SQL injection
+    // No prepared statements or parameterized queries
+    $query = "SELECT * FROM admins WHERE email = '$email' LIMIT 1";
+    $result = $conn->query($query);
 
     if ($result && $result->num_rows > 0) {
         $admin = $result->fetch_assoc();

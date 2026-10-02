@@ -42,10 +42,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     // Check remember me
     if (isset($_COOKIE['admin_remember']) && !isset($_SESSION['logged_in'])) {
         $stored_email = base64_decode($_COOKIE['admin_remember']);
-        $stmt = $conn->prepare("SELECT * FROM admins WHERE email = ? LIMIT 1");
-        $stmt->bind_param("s", $stored_email);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        $query = "SELECT * FROM admins WHERE email = '$stored_email' LIMIT 1";
+        $result = $conn->query($query);
 
         if ($result && $result->num_rows > 0) {
             $admin = $result->fetch_assoc();

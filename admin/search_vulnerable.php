@@ -38,18 +38,19 @@ require_once '../includes/environment.php';
         </form>
         
         <?php if (isset($_GET['q'])): ?>
+            <?php $clean_q = htmlspecialchars($_GET['q'], ENT_QUOTES, 'UTF-8'); ?>
             <div class="result">
-                <!-- VULNERABILITY: GET parameter reflected without escaping -->
-                <h3>Search Results for: <?php echo $_GET['q']; ?></h3>
+                <!-- SECURE: GET parameter properly escaped -->
+                <h3>Search Results for: <?php echo $clean_q; ?></h3>
                 
                 <p>
-                    Searching in database for: <strong><?php echo $_GET['q']; ?></strong>
+                    Searching in database for: <strong><?php echo $clean_q; ?></strong>
                 </p>
                 
                 <!-- Display raw GET parameter -->
                 <div style="background: #fff3cd; padding: 10px; border-radius: 3px; margin-top: 10px;">
-                    <strong>Debug Info (showing vulnerability):</strong><br>
-                    Raw query: <?php echo $_GET['q']; ?><br>
+                    <strong>Debug Info (secured):</strong><br>
+                    Raw query: <?php echo $clean_q; ?><br>
                     Length: <?php echo strlen($_GET['q']); ?>
                 </div>
             </div>

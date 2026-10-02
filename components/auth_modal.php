@@ -107,8 +107,8 @@
         // Check if we're in a subdirectory (like admin) and adjust path accordingly
         $imagePath = (strpos($_SERVER['REQUEST_URI'], '/admin/') !== false) ? '../Assets/forest-hiker.jpg' : 'Assets/forest-hiker.jpg';
         if (file_exists($imagePath)) {
-          // VULNERABILITY: Removed htmlspecialchars - XSS vulnerability
-          echo '<img src="' . $imagePath . '" alt="Adventure awaits in the wilderness" class="modal-hero-image">';
+          // SECURE: Added htmlspecialchars to prevent XSS
+          echo '<img src="' . htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') . '" alt="Adventure awaits in the wilderness" class="modal-hero-image">';
         } else {
           // Fallback content if image doesn't exist
           echo '<div class="themed-content">';

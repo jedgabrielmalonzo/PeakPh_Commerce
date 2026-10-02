@@ -9,10 +9,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $password = $_POST['password'] ?? '';
     $remember_me = isset($_POST['remember_me']);
 
-    // VULNERABILITY: Direct SQL concatenation - vulnerable to SQL injection
-    // No prepared statements or parameterized queries
-    $query = "SELECT * FROM admins WHERE email = '$email' LIMIT 1";
-    $result = $conn->query($query);
+    // SECURE: Use prepared statement
+    $stmt = $conn->prepare("SELECT * FROM admins WHERE email = ? LIMIT 1");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
     if ($result && $result->num_rows > 0) {
         $admin = $result->fetch_assoc();
@@ -27,7 +28,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $_SESSION['login_time'] = time();
 
             if ($remember_me) {
-                setcookie('admin_remember', base64_encode($admin['email']), time() + (30 * 24 * 60 * 60), '/');
+                // SECURE: Use cryptographically signed cookie
+                $secret = "PEAKPH_SUPER_SECRET_KEY";
+                setcookie('admin_remember', $cookie_data, time() + (30 * 24 * 60 * 60), '/');
             }
 
             header("Location: dashboard.php");
@@ -41,9 +44,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 } else {
     // Check remember me
     if (isset($_COOKIE['admin_remember']) && !isset($_SESSION['logged_in'])) {
-        $stored_email = base64_decode($_COOKIE['admin_remember']);
-        $query = "SELECT * FROM admins WHERE email = '$stored_email' LIMIT 1";
-        $result = $conn->query($query);
+        $secret = "PEAKPH_SUPER_SECRET_KEY";
+        $parts = explode('|', $_COOKIE['admin_remember']);
+        
+        if (count($parts) === 2) {
+            list($stored_email, $hash) = $parts;
+            if (hash_equals(hash_hmac('sha256', $stored_email, $secret), $hash)) {
+                $stmt = $conn->prepare("SELECT * FROM admins WHERE email = ? LIMIT 1");
+                $stmt->bind_param("s", $stored_email);
+                $stmt->execute();
+                $result = $stmt->get_result();
 
         if ($result && $result->num_rows > 0) {
             $admin = $result->fetch_assoc();
@@ -56,6 +66,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
             header("Location: dashboard.php");
             exit;
+        }
+            }
         }
     }
 

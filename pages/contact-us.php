@@ -62,11 +62,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )");
 
-        // CRITICAL VULNERABILITY: Using string concatenation instead of prepared statements
-        $sql = "INSERT INTO contact_messages (name, email, phone, subject, message, ip_address, user_agent) 
-                VALUES ('$name', '$email', '$phone', '$subject', '$message', '$ip', '$user_agent')";
+        // SECURE: Using prepared statements
+        $stmt = $conn->prepare("INSERT INTO contact_messages (name, email, phone, subject, message, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssssss", $name, $email, $phone, $subject, $message, $ip, $user_agent);
         
-        if ($conn->query($sql) === TRUE) {
+        if ($stmt->execute()) {
             $message_sent = true;
         } else {
             $form_error = "Database Error: " . $conn->error;

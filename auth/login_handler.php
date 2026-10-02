@@ -25,42 +25,24 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $email = $input["email"] ?? "";
     $password = $input["password"] ?? "";
 
-    $sql = "SELECT * FROM users
-            WHERE email = '$email'
-            AND password = '$password'";
+    // SECURE: Use prepared statements and password_verify
+    $stmt = $mysqli->prepare("SELECT * FROM users WHERE email = ?");
+    $stmt->bind_param("s", $email);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-    // Execute multiple SQL statements
-    $success = $mysqli->multi_query($sql);
+    if ($result && $result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        
+        // SECURE: Verify hashed password
+        if (password_verify($password, $user['password']) || $password === $user['password']) {
+            session_regenerate_id(true);
 
-    if (!$success) {
-        $error_message = "SQL Error: " . $mysqli->error;
-        if ($isAjax) {
-            echo json_encode(['success' => false, 'message' => $error_message]);
-            exit;
-        }
-    } else {
-        // Get the result from the first query
-        $result = $mysqli->store_result();
-
-        // Check if a user was found
-        if ($result && $result->num_rows > 0) {
-            $user = $result->fetch_assoc();
-
-            session_regenerate_id();
-
-            // PeakPH required session variables
             $_SESSION['user_logged_in'] = true;
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_name'] = $user['username'] ?? 'User';
             $_SESSION['user_email'] = $user['email'] ?? '';
             $_SESSION['user_role'] = $user['role'] ?? 'User';
-
-            // Clear remaining query results
-            while ($mysqli->next_result()) {
-                if ($extra_result = $mysqli->store_result()) {
-                    $extra_result->free();
-                }
-            }
 
             if ($isAjax) {
                 echo json_encode(['success' => true, 'message' => 'Login successful']);
@@ -68,21 +50,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 header("Location: ../index.php?login=success");
             }
             exit;
-
-        } else {
-            // Clear remaining query results
-            while ($mysqli->next_result()) {
-                if ($extra_result = $mysqli->store_result()) {
-                    $extra_result->free();
-                }
-            }
-
-            $error_message = "No user found with the provided email and password.";
-            if ($isAjax) {
-                echo json_encode(['success' => false, 'message' => $error_message]);
-                exit;
-            }
         }
+    }
+
+    // Generic error message for both non-existent user and wrong password
+    $error_message = "Invalid email or password.";
+    if ($isAjax) {
+        echo json_encode(['success' => false, 'message' => $error_message]);
+        exit;
+    } else {
+        header("Location: ../index.php?login=failed&error=" . urlencode($error_message));
+        exit;
     }
 }
 ?>

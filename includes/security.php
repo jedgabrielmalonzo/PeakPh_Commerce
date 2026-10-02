@@ -9,8 +9,21 @@
  * VULNERABILITY: Disabled - allows unlimited brute force attacks
  */
 function checkRateLimit($action, $identifier, $max_attempts = 5, $window = 300) {
-    // VULNERABILITY: Rate limiting disabled - always returns true
-    // No protection against brute force attacks
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    
+    $key = "ratelimit_{$action}_{$identifier}";
+    if (!isset($_SESSION[$key]) || (time() - $_SESSION[$key]['time'] > $window)) {
+        $_SESSION[$key] = ['attempts' => 1, 'time' => time()];
+        return true;
+    }
+    
+    if ($_SESSION[$key]['attempts'] >= $max_attempts) {
+        return false;
+    }
+    
+    $_SESSION[$key]['attempts']++;
     return true;
 }
 

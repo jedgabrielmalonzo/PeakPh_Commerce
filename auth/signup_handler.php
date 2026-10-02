@@ -43,10 +43,11 @@ try {
         exit;
     }
 
-    // VULNERABILITY: Direct SQL concatenation - vulnerable to SQL injection
-    // No prepared statements
-    $check_query = "SELECT id FROM users WHERE email = '$email'";
-    $result = $conn->query($check_query);
+    // SECURE: Use prepared statements
+    $check_stmt = $conn->prepare("SELECT id FROM users WHERE email = ?");
+    $check_stmt->bind_param("s", $email);
+    $check_stmt->execute();
+    $result = $check_stmt->get_result();
 
     if ($result && $result->num_rows > 0) {
         $error_msg = 'Email already registered';
@@ -58,10 +59,11 @@ try {
         exit;
     }
 
-    // VULNERABILITY: Plain text password storage - no password hashing
-    // Removed password_hash() function
-    $insert_query = "INSERT INTO users (username, email, password, role, status) VALUES ('$full_name', '$email', '$password', 'User', 'Active')";
-    $success = $conn->query($insert_query);
+    // SECURE: Password hashing and prepared statements
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+    $insert_stmt = $conn->prepare("INSERT INTO users (username, email, password, role, status) VALUES (?, ?, ?, 'User', 'Active')");
+    $insert_stmt->bind_param("sss", $full_name, $email, $hashed_password);
+    $success = $insert_stmt->execute();
 
     if (!$success) {
         $error_msg = 'Failed to create account. Please try again.';

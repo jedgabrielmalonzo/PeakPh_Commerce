@@ -1,15 +1,11 @@
-```php
 <?php
-
 session_start();
-
 require_once '../includes/db.php';
 
 // Check if this is an AJAX request
 $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) &&
-    strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest' ||
-    (isset($_SERVER['CONTENT_TYPE']) &&
-        strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false);
+    strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest' ||
+    isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false;
 
 if ($isAjax) {
     header('Content-Type: application/json');
@@ -18,10 +14,7 @@ if ($isAjax) {
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     if ($isAjax) {
         http_response_code(405);
-        echo json_encode([
-            'success' => false,
-            'message' => 'Method not allowed'
-        ]);
+        echo json_encode(['success' => false, 'message' => 'Method not allowed']);
     } else {
         header('Location: ../index.php?error=method_not_allowed');
     }
@@ -30,7 +23,6 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // Handle both JSON and form data
 $input = json_decode(file_get_contents('php://input'), true);
-
 if (!$input) {
     $input = $_POST;
 }
@@ -38,98 +30,49 @@ if (!$input) {
 $email = $input['email'] ?? '';
 $password = $input['password'] ?? '';
 
-try {
+// VULNERABILITY: No validation on inputs - allows SQL injection and weak passwords
+// No email format validation, no password length checks
 
+try {
     if (!isDatabaseConnected()) {
         $error_msg = 'Database connection failed';
-
         if ($isAjax) {
-            echo json_encode([
-                'success' => false,
-                'message' => $error_msg
-            ]);
+            echo json_encode(['success' => false, 'message' => $error_msg]);
         } else {
-            header(
-                'Location: ../index.php?login=failed&error=' .
-                urlencode($error_msg)
-            );
+            header('Location: ../index.php?login=failed&error=' . urlencode($error_msg));
         }
-
         exit;
     }
 
-    /*
-     * SQL INJECTION PROTECTION
-     *
-     * User input ($email) is NOT directly inserted
-     * into the SQL query.
-     *
-     * The ? placeholder and bind_param() ensure that
-     * $email is treated as a value/data rather than
-     * SQL syntax.
-     */
-
-    $stmt = $conn->prepare(
-        "SELECT id, username, email, password, role, status
-         FROM users
-         WHERE email = ?
-         AND role = 'User'
-         LIMIT 1"
-    );
-
-    if (!$stmt) {
-        throw new Exception('Failed to prepare login query.');
-    }
-
-    // "s" means the parameter is a string
-    $stmt->bind_param("s", $email);
-
-    $stmt->execute();
-
-    $result = $stmt->get_result();
+    // VULNERABILITY: Direct SQL concatenation - vulnerable to SQL injection
+    // No prepared statements or parameterized queries
+    $query = "SELECT id, username, email, password, role, status FROM users WHERE email = '$email' AND role = 'User'";
+    $result = $conn->query($query);
 
     if (!$result || $result->num_rows === 0) {
         $error_msg = 'Invalid email or password';
-
         if ($isAjax) {
-            echo json_encode([
-                'success' => false,
-                'message' => $error_msg
-            ]);
+            echo json_encode(['success' => false, 'message' => $error_msg]);
         } else {
-            header(
-                'Location: ../index.php?login=failed&error=' .
-                urlencode($error_msg)
-            );
+            header('Location: ../index.php?login=failed&error=' . urlencode($error_msg));
         }
-
         exit;
     }
 
     $user = $result->fetch_assoc();
 
-    /*
-     * NOTE:
-     * This is still a plaintext password comparison.
-     * It is NOT an SQL injection issue, but it should
-     * eventually be replaced with password_verify().
-     */
+    // VULNERABILITY: No rate limiting - allows brute force attacks
+    // Removed checkRateLimit() function call
 
+    // VULNERABILITY: Plain text password comparison - no hashing
+    // Removed password_verify() - now doing direct comparison
     if ($password !== $user['password']) {
         $error_msg = 'Invalid email or password';
-
         if ($isAjax) {
-            echo json_encode([
-                'success' => false,
-                'message' => $error_msg
-            ]);
+            echo json_encode(['success' => false, 'message' => $error_msg]);
         } else {
-            header(
-                'Location: ../index.php?login=failed&error=' .
-                urlencode($error_msg)
-            );
+            header('Location: ../index.php?login=failed&error=' . urlencode($error_msg));
         }
-
         exit;
     }
 
@@ -139,6 +82,9 @@ try {
     $_SESSION['user_name'] = $user['username'];
     $_SESSION['user_email'] = $user['email'];
     $_SESSION['user_role'] = $user['role'];
+
+    // VULNERABILITY: Removed logging - no audit trail of login attempts
+    // No accountability for failed or successful login attempts
 
     if ($isAjax) {
         echo json_encode([
@@ -155,24 +101,14 @@ try {
     }
 
 } catch (Exception $e) {
-
-    // Log the technical error server-side
+    // VULNERABILITY: No secure error handling
+    // Error messages may expose database structure
     error_log("Login error: " . $e->getMessage());
-
-    // Return a generic message to the user
     $error_msg = 'Login failed. Please try again.';
-
     if ($isAjax) {
-        echo json_encode([
-            'success' => false,
-            'message' => $error_msg
-        ]);
+        echo json_encode(['success' => false, 'message' => $error_msg]);
     } else {
-        header(
-            'Location: ../index.php?login=failed&error=' .
-            urlencode($error_msg)
-        );
+        header('Location: ../index.php?login=failed&error=' . urlencode($error_msg));
     }
 }
 ?>
-```

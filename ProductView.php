@@ -80,54 +80,86 @@ if (!$product) {
 // CUSTOMER REVIEWS BACKEND LOGIC
 // ==========================================
 $review_error = '';
+$is_user_logged_in = isUserLoggedIn() || !empty($_SESSION['is_admin']) || (!empty($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin');
+$current_user = function_exists('getCurrentUser') ? getCurrentUser() : null;
+$logged_user_id = $current_user['id'] ?? ($_SESSION['user_id'] ?? null);
+$logged_user_name = $current_user['name'] ?? ($_SESSION['user_name'] ?? '');
+$is_admin = !empty($_SESSION['is_admin']) || (!empty($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin');
+
+// Handle Review Deletion
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_review'])) {
+    $review_id = intval($_POST['review_id'] ?? 0);
+    $pid_str = (string)($product['id'] ?? $product_id);
+
+    if (!$is_user_logged_in) {
+        $review_error = 'You must be logged in to delete a review.';
+    } elseif ($review_id > 0 && isDatabaseConnected()) {
+        try {
+            if ($is_admin) {
+                $del_stmt = $conn->prepare("DELETE FROM product_reviews WHERE id = ?");
+                $del_stmt->bind_param("i", $review_id);
+                $del_stmt->execute();
+            } else {
+                $del_stmt = $conn->prepare("DELETE FROM product_reviews WHERE id = ? AND (user_id = ? OR (user_id IS NULL AND user_name = ?))");
+                $del_stmt->bind_param("iis", $review_id, $logged_user_id, $logged_user_name);
+                $del_stmt->execute();
+            }
+
+            header("Location: ProductView.php?id=" . urlencode($pid_str) . "&review_deleted=1#reviewsSection");
+            exit;
+        } catch (Exception $e) {
+            $review_error = 'Failed to delete review: ' . $e->getMessage();
+        }
+    }
+}
 
 // Handle Review Submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_review'])) {
-    $rating = intval($_POST['rating'] ?? 5);
-    $user_name = trim($_POST['user_name'] ?? '');
-    $review_title = trim($_POST['review_title'] ?? '');
-    $review_text = trim($_POST['review_text'] ?? '');
-    $user_id = $_SESSION['user_id'] ?? null;
-
-    if (empty($user_name)) {
-        if (!empty($_SESSION['user_name'])) {
-            $user_name = $_SESSION['user_name'];
-        } else {
-            $user_name = 'Outdoor Adventurer';
-        }
-    }
-
-    if ($rating < 1 || $rating > 5) {
-        $review_error = 'Please select a rating between 1 and 5 stars.';
-    } elseif (empty($review_text)) {
-        $review_error = 'Please write a review comment.';
+    if (!$is_user_logged_in) {
+        $review_error = 'Guests are not permitted to review products. Please log in to your account.';
     } else {
-        if (isDatabaseConnected()) {
-            try {
-                $conn->query("CREATE TABLE IF NOT EXISTS product_reviews (
-                    id INT PRIMARY KEY AUTO_INCREMENT,
-                    product_id VARCHAR(50) NOT NULL,
-                    user_id INT NULL,
-                    user_name VARCHAR(150) NOT NULL,
-                    rating TINYINT NOT NULL,
-                    review_title VARCHAR(255) NULL,
-                    review_text TEXT NOT NULL,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    INDEX (product_id)
-                )");
+        $rating = intval($_POST['rating'] ?? 5);
+        $user_name = trim($_POST['user_name'] ?? '');
+        $review_title = trim($_POST['review_title'] ?? '');
+        $review_text = trim($_POST['review_text'] ?? '');
+        $user_id = $logged_user_id;
 
-                $stmt = $conn->prepare("INSERT INTO product_reviews (product_id, user_id, user_name, rating, review_title, review_text) VALUES (?, ?, ?, ?, ?, ?)");
-                $pid_str = (string)($product['id'] ?? $product_id);
-                $stmt->bind_param("sisiss", $pid_str, $user_id, $user_name, $rating, $review_title, $review_text);
-                $stmt->execute();
+        if (empty($user_name)) {
+            $user_name = !empty($logged_user_name) ? $logged_user_name : 'Outdoor Adventurer';
+        }
 
-                header("Location: ProductView.php?id=" . urlencode($pid_str) . "&review_submitted=1#reviewsSection");
-                exit;
-            } catch (Exception $e) {
-                $review_error = 'Failed to submit review: ' . $e->getMessage();
-            }
+        if ($rating < 1 || $rating > 5) {
+            $review_error = 'Please select a rating between 1 and 5 stars.';
+        } elseif (empty($review_text)) {
+            $review_error = 'Please write a review comment.';
         } else {
-            $review_error = 'Database connection error. Please try again.';
+            if (isDatabaseConnected()) {
+                try {
+                    $conn->query("CREATE TABLE IF NOT EXISTS product_reviews (
+                        id INT PRIMARY KEY AUTO_INCREMENT,
+                        product_id VARCHAR(50) NOT NULL,
+                        user_id INT NULL,
+                        user_name VARCHAR(150) NOT NULL,
+                        rating TINYINT NOT NULL,
+                        review_title VARCHAR(255) NULL,
+                        review_text TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        INDEX (product_id)
+                    )");
+
+                    $stmt = $conn->prepare("INSERT INTO product_reviews (product_id, user_id, user_name, rating, review_title, review_text) VALUES (?, ?, ?, ?, ?, ?)");
+                    $pid_str = (string)($product['id'] ?? $product_id);
+                    $stmt->bind_param("sisiss", $pid_str, $user_id, $user_name, $rating, $review_title, $review_text);
+                    $stmt->execute();
+
+                    header("Location: ProductView.php?id=" . urlencode($pid_str) . "&review_submitted=1#reviewsSection");
+                    exit;
+                } catch (Exception $e) {
+                    $review_error = 'Failed to submit review: ' . $e->getMessage();
+                }
+            } else {
+                $review_error = 'Database connection error. Please try again.';
+            }
         }
     }
 }
@@ -1004,6 +1036,183 @@ if ($reviews_count === 0 && !isset($_GET['review_submitted'])) {
       margin-bottom: 20px;
     }
 
+    .review-card-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .review-card-header-actions .review-card-stars {
+      margin-bottom: 0;
+    }
+
+    .review-delete-form {
+      display: inline-flex;
+      margin: 0;
+      padding: 0;
+    }
+
+    .review-delete-btn {
+      background: #fff5f5;
+      color: #dc3545;
+      border: 1px solid #f8d7da;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+    }
+
+    .review-delete-btn:hover {
+      background: #dc3545;
+      color: #ffffff;
+      border-color: #dc3545;
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(220, 53, 69, 0.25);
+    }
+
+    /* Guest Locked & Sneak Peek Styles */
+    .guest-locked-box {
+      background: #fafbfc;
+    }
+
+    .guest-locked-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .guest-sneakpeek-card {
+      background: linear-gradient(135deg, #0d3b2e 0%, #1a4d3d 100%);
+      color: #ffffff;
+      border-radius: 14px;
+      padding: 28px 32px;
+      margin-bottom: 30px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      box-shadow: 0 10px 25px rgba(13, 59, 46, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .guest-sneakpeek-card::before {
+      content: '';
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 140px;
+      height: 140px;
+      background: radial-gradient(circle, rgba(255, 209, 102, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .sneakpeek-lock-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.9rem;
+      color: #ffd166;
+      flex-shrink: 0;
+      border: 2px solid rgba(255, 209, 102, 0.4);
+    }
+
+    .sneakpeek-content {
+      flex: 1;
+    }
+
+    .sneakpeek-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 209, 102, 0.2);
+      color: #ffd166;
+      border: 1px solid rgba(255, 209, 102, 0.35);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .sneakpeek-content h3 {
+      margin: 0 0 6px 0;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .sneakpeek-content p {
+      margin: 0 0 16px 0;
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 0.92rem;
+      line-height: 1.5;
+      max-width: 650px;
+    }
+
+    .sneakpeek-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .sneakpeek-actions .write-review-btn {
+      background: #ffd166;
+      color: #0d3b2e;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .sneakpeek-actions .write-review-btn:hover {
+      background: #ffc43d;
+      color: #000;
+      transform: translateY(-2px);
+    }
+
+    .sneakpeek-signup-btn {
+      background: rgba(255, 255, 255, 0.12) !important;
+      color: #fff !important;
+      border: 1px solid rgba(255, 255, 255, 0.35) !important;
+      padding: 10px 18px !important;
+      border-radius: 8px !important;
+      font-weight: 600 !important;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .sneakpeek-signup-btn:hover {
+      background: rgba(255, 255, 255, 0.25) !important;
+      color: #fff !important;
+    }
+
     @media (max-width: 900px) {
       .reviews-overview-card {
         grid-template-columns: 1fr;
@@ -1262,6 +1471,13 @@ if ($reviews_count === 0 && !isset($_GET['review_submitted'])) {
         </div>
       <?php endif; ?>
 
+      <?php if (isset($_GET['review_deleted'])): ?>
+        <div class="review-alert success">
+          <i class="bi bi-trash3-fill" style="font-size: 1.3rem;"></i>
+          <span>The product review has been successfully deleted.</span>
+        </div>
+      <?php endif; ?>
+
       <?php if (!empty($review_error)): ?>
         <div class="review-alert error">
           <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.3rem;"></i>
@@ -1304,59 +1520,95 @@ if ($reviews_count === 0 && !isset($_GET['review_submitted'])) {
           <?php endfor; ?>
         </div>
 
-        <div class="rating-cta-box">
-          <p>Share your thoughts with other adventurers!</p>
-          <button type="button" class="write-review-btn" onclick="toggleReviewForm()">
-            <i class="bi bi-pencil-square"></i> Write a Review
-          </button>
+        <div class="rating-cta-box <?php echo !$is_user_logged_in ? 'guest-locked-box' : ''; ?>">
+          <?php if ($is_user_logged_in): ?>
+            <p>Share your thoughts with other adventurers!</p>
+            <button type="button" class="write-review-btn" onclick="toggleReviewForm()">
+              <i class="bi bi-pencil-square"></i> Write a Review
+            </button>
+          <?php else: ?>
+            <div class="guest-locked-badge">
+              <i class="bi bi-lock-fill"></i> Members Only
+            </div>
+            <p>Log in to share your outdoor gear review & rating.</p>
+            <button type="button" class="write-review-btn login-to-review-btn" onclick="openAuthModal('login')">
+              <i class="bi bi-box-arrow-in-right"></i> Log In to Review
+            </button>
+          <?php endif; ?>
         </div>
       </div>
 
-      <!-- Write a Review Form Card -->
-      <div class="review-form-card" id="reviewFormContainer">
-        <h3><i class="bi bi-pencil-fill"></i> Write Your Review</h3>
-        <form method="POST" action="ProductView.php?id=<?php echo urlencode($product['id'] ?? $product_id); ?>#reviewsSection" id="reviewSubmitForm">
-          <div class="star-rating-picker">
-            <label>Your Rating: *</label>
-            <div class="stars-select" id="starRatingSelector">
-              <i class="bi bi-star-fill active" data-rating="1"></i>
-              <i class="bi bi-star-fill active" data-rating="2"></i>
-              <i class="bi bi-star-fill active" data-rating="3"></i>
-              <i class="bi bi-star-fill active" data-rating="4"></i>
-              <i class="bi bi-star-fill active" data-rating="5"></i>
+      <?php if ($is_user_logged_in): ?>
+        <!-- Write a Review Form Card (Logged-in Adventurers) -->
+        <div class="review-form-card" id="reviewFormContainer">
+          <h3><i class="bi bi-pencil-fill"></i> Write Your Review</h3>
+          <form method="POST" action="ProductView.php?id=<?php echo urlencode($product['id'] ?? $product_id); ?>#reviewsSection" id="reviewSubmitForm">
+            <div class="star-rating-picker">
+              <label>Your Rating: *</label>
+              <div class="stars-select" id="starRatingSelector">
+                <i class="bi bi-star-fill active" data-rating="1"></i>
+                <i class="bi bi-star-fill active" data-rating="2"></i>
+                <i class="bi bi-star-fill active" data-rating="3"></i>
+                <i class="bi bi-star-fill active" data-rating="4"></i>
+                <i class="bi bi-star-fill active" data-rating="5"></i>
+              </div>
+              <span class="rating-feedback-text" id="ratingFeedback">5 stars - Excellent!</span>
+              <input type="hidden" name="rating" id="reviewRatingInput" value="5">
             </div>
-            <span class="rating-feedback-text" id="ratingFeedback">5 stars - Excellent!</span>
-            <input type="hidden" name="rating" id="reviewRatingInput" value="5">
-          </div>
 
-          <div class="review-form-row">
+            <div class="review-form-row">
+              <div class="review-form-group">
+                <label for="reviewUserName">Your Name *</label>
+                <input type="text" id="reviewUserName" name="user_name" 
+                       value="<?php echo htmlspecialchars($logged_user_name ?: ($_SESSION['user_name'] ?? '')); ?>" 
+                       placeholder="e.g. John Doe" required>
+              </div>
+              <div class="review-form-group">
+                <label for="reviewTitle">Review Title (Optional)</label>
+                <input type="text" id="reviewTitle" name="review_title" 
+                       placeholder="e.g. Highly durable and compact!">
+              </div>
+            </div>
+
             <div class="review-form-group">
-              <label for="reviewUserName">Your Name *</label>
-              <input type="text" id="reviewUserName" name="user_name" 
-                     value="<?php echo htmlspecialchars($_SESSION['user_name'] ?? ''); ?>" 
-                     placeholder="e.g. John Doe" required>
+              <label for="reviewText">Your Review *</label>
+              <textarea id="reviewText" name="review_text" rows="4" 
+                        placeholder="What did you like or dislike about this product? How did it perform during your adventures?" required></textarea>
             </div>
-            <div class="review-form-group">
-              <label for="reviewTitle">Review Title (Optional)</label>
-              <input type="text" id="reviewTitle" name="review_title" 
-                     placeholder="e.g. Highly durable and compact!">
+
+            <div class="review-form-actions">
+              <button type="button" class="btn-secondary" onclick="toggleReviewForm()">Cancel</button>
+              <button type="submit" name="submit_review" class="write-review-btn">
+                <i class="bi bi-send-fill"></i> Submit Review
+              </button>
+            </div>
+          </form>
+        </div>
+      <?php else: ?>
+        <!-- Guest Sneak Peek & Locked Banner -->
+        <div class="guest-sneakpeek-card">
+          <div class="sneakpeek-lock-icon">
+            <i class="bi bi-shield-lock-fill"></i>
+          </div>
+          <div class="sneakpeek-content">
+            <div class="sneakpeek-tag">
+              <i class="bi bi-eye-fill"></i> Community Sneak Peek
+            </div>
+            <h3>Customer Reviews are Locked for Guests</h3>
+            <p>
+              You are viewing a sneak peek of real trail reviews and ratings. To prevent spam and ensure authentic gear feedback, product reviewing is exclusively reserved for registered PeakPH members.
+            </p>
+            <div class="sneakpeek-actions">
+              <button type="button" class="write-review-btn" onclick="openAuthModal('login')">
+                <i class="bi bi-box-arrow-in-right"></i> Log In to Review
+              </button>
+              <button type="button" class="btn-secondary sneakpeek-signup-btn" onclick="openAuthModal('signup')">
+                <i class="bi bi-person-plus"></i> Create Free Account
+              </button>
             </div>
           </div>
-
-          <div class="review-form-group">
-            <label for="reviewText">Your Review *</label>
-            <textarea id="reviewText" name="review_text" rows="4" 
-                      placeholder="What did you like or dislike about this product? How did it perform during your adventures?" required></textarea>
-          </div>
-
-          <div class="review-form-actions">
-            <button type="button" class="btn-secondary" onclick="toggleReviewForm()">Cancel</button>
-            <button type="submit" name="submit_review" class="write-review-btn">
-              <i class="bi bi-send-fill"></i> Submit Review
-            </button>
-          </div>
-        </form>
-      </div>
+        </div>
+      <?php endif; ?>
 
       <!-- Reviews Cards List -->
       <div class="reviews-list">
@@ -1365,6 +1617,17 @@ if ($reviews_count === 0 && !isset($_GET['review_submitted'])) {
             $clean_name = strip_tags($rev['user_name'] ?? '');
             $initial = !empty($clean_name) ? strtoupper(substr($clean_name, 0, 1)) : '★';
             $rev_rating = intval($rev['rating'] ?? 5);
+
+            $can_delete = false;
+            if ($is_user_logged_in) {
+                if ($is_admin) {
+                    $can_delete = true;
+                } elseif (!empty($rev['user_id']) && $logged_user_id && intval($rev['user_id']) === intval($logged_user_id)) {
+                    $can_delete = true;
+                } elseif (empty($rev['user_id']) && !empty($logged_user_name) && $rev['user_name'] === $logged_user_name) {
+                    $can_delete = true;
+                }
+            }
           ?>
             <div class="review-card">
               <div class="review-card-header">
@@ -1379,14 +1642,24 @@ if ($reviews_count === 0 && !isset($_GET['review_submitted'])) {
                     <span class="review-date"><?php echo date('F j, Y', strtotime($rev['created_at'])); ?></span>
                   </div>
                 </div>
-                <div class="review-card-stars">
-                  <?php for ($s = 1; $s <= 5; $s++): ?>
-                    <?php if ($s <= $rev_rating): ?>
-                      <i class="bi bi-star-fill"></i>
-                    <?php else: ?>
-                      <i class="bi bi-star" style="color: #ccc;"></i>
-                    <?php endif; ?>
-                  <?php endfor; ?>
+                <div class="review-card-header-actions">
+                  <div class="review-card-stars">
+                    <?php for ($s = 1; $s <= 5; $s++): ?>
+                      <?php if ($s <= $rev_rating): ?>
+                        <i class="bi bi-star-fill"></i>
+                      <?php else: ?>
+                        <i class="bi bi-star" style="color: #ccc;"></i>
+                      <?php endif; ?>
+                    <?php endfor; ?>
+                  </div>
+                  <?php if ($can_delete && is_numeric($rev['id'])): ?>
+                    <form method="POST" action="ProductView.php?id=<?php echo urlencode($product['id'] ?? $product_id); ?>#reviewsSection" onsubmit="return confirm('Are you sure you want to delete this review?');" class="review-delete-form">
+                      <input type="hidden" name="review_id" value="<?php echo intval($rev['id']); ?>">
+                      <button type="submit" name="delete_review" class="review-delete-btn" title="Delete this review">
+                        <i class="bi bi-trash3"></i> <span>Delete</span>
+                      </button>
+                    </form>
+                  <?php endif; ?>
                 </div>
               </div>
 
@@ -1404,9 +1677,15 @@ if ($reviews_count === 0 && !isset($_GET['review_submitted'])) {
             <i class="bi bi-chat-heart"></i>
             <h3>No Reviews Yet</h3>
             <p>Be the very first customer to review the <?php echo htmlspecialchars($product['product_name']); ?>!</p>
-            <button type="button" class="write-review-btn" onclick="toggleReviewForm()">
-              <i class="bi bi-pencil-square"></i> Leave a Review
-            </button>
+            <?php if ($is_user_logged_in): ?>
+              <button type="button" class="write-review-btn" onclick="toggleReviewForm()">
+                <i class="bi bi-pencil-square"></i> Leave a Review
+              </button>
+            <?php else: ?>
+              <button type="button" class="write-review-btn" onclick="openAuthModal('login')">
+                <i class="bi bi-box-arrow-in-right"></i> Log In to Leave a Review
+              </button>
+            <?php endif; ?>
           </div>
         <?php endif; ?>
       </div>
@@ -1652,9 +1931,32 @@ if ($reviews_count === 0 && !isset($_GET['review_submitted'])) {
     // ==========================================
     // CUSTOMER REVIEWS INTERACTION SCRIPT
     // ==========================================
+    function openAuthModal(tab = 'login') {
+      const authModal = document.getElementById('authModal');
+      const loginForm = document.getElementById('loginForm');
+      const signupForm = document.getElementById('signupForm');
+      if (authModal) {
+        authModal.classList.add('active');
+        if (tab === 'signup') {
+          if (loginForm) loginForm.style.display = 'none';
+          if (signupForm) signupForm.style.display = 'block';
+        } else {
+          if (loginForm) loginForm.style.display = 'block';
+          if (signupForm) signupForm.style.display = 'none';
+        }
+      } else {
+        const loginIcon = document.getElementById('loginIcon');
+        if (loginIcon) loginIcon.click();
+      }
+    }
+
     function toggleReviewForm() {
       const formCard = document.getElementById('reviewFormContainer');
-      if (!formCard) return;
+      if (!formCard) {
+        // Guest user: open authentication modal
+        openAuthModal('login');
+        return;
+      }
 
       if (formCard.classList.contains('active')) {
         formCard.classList.remove('active');

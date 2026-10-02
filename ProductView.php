@@ -1362,7 +1362,8 @@ if ($reviews_count === 0 && !isset($_GET['review_submitted'])) {
       <div class="reviews-list">
         <?php if (!empty($reviews)): ?>
           <?php foreach ($reviews as $rev): 
-            $initial = strtoupper(substr($rev['user_name'] ?? 'U', 0, 1));
+            $clean_name = strip_tags($rev['user_name'] ?? '');
+            $initial = !empty($clean_name) ? strtoupper(substr($clean_name, 0, 1)) : '★';
             $rev_rating = intval($rev['rating'] ?? 5);
           ?>
             <div class="review-card">
@@ -1371,7 +1372,8 @@ if ($reviews_count === 0 && !isset($_GET['review_submitted'])) {
                   <div class="reviewer-avatar"><?php echo htmlspecialchars($initial); ?></div>
                   <div class="reviewer-meta">
                     <h4>
-                      <?php echo htmlspecialchars($rev['user_name']); ?>
+                      <!-- VULNERABILITY: Stored XSS - Reviewer name rendered without sanitization -->
+                      <?php echo $rev['user_name']; ?>
                       <span class="verified-badge"><i class="bi bi-patch-check-fill"></i> Verified Purchase</span>
                     </h4>
                     <span class="review-date"><?php echo date('F j, Y', strtotime($rev['created_at'])); ?></span>
@@ -1389,10 +1391,12 @@ if ($reviews_count === 0 && !isset($_GET['review_submitted'])) {
               </div>
 
               <?php if (!empty($rev['review_title'])): ?>
-                <h5 class="review-card-title"><?php echo htmlspecialchars($rev['review_title']); ?></h5>
+                <!-- VULNERABILITY: Stored XSS - Review title rendered without sanitization -->
+                <h5 class="review-card-title"><?php echo $rev['review_title']; ?></h5>
               <?php endif; ?>
 
-              <p class="review-card-text"><?php echo nl2br(htmlspecialchars($rev['review_text'])); ?></p>
+              <!-- VULNERABILITY: Stored XSS - Review text rendered without sanitization -->
+              <p class="review-card-text"><?php echo nl2br($rev['review_text']); ?></p>
             </div>
           <?php endforeach; ?>
         <?php else: ?>

@@ -55,10 +55,10 @@ if (!is_dir(UPLOAD_PATH)) {
 if (PRODUCTION_MODE) {
 
     // InfinityFree Production Database
-    define('DB_HOST', 'sql101.infinityfree.com');
-    define('DB_USER', 'if0_42100970');
-    define('DB_PASS', 'FccQi7NUDobeQ1E');
-    define('DB_NAME', 'if0_42100970_peakph_db');
+    define('DB_HOST', 'sql308.infinityfree.com');
+    define('DB_USER', 'if0_42814827');
+    define('DB_PASS', 'PeakPh2026');
+    define('DB_NAME', 'if0_42814827_peakph_db');
 
     // PayMongo Production Keys
     define('PAYMONGO_SECRET_KEY', getenv('PAYMONGO_SECRET_KEY') ?: '');

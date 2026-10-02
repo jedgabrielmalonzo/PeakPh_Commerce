@@ -5,6 +5,7 @@
  */
 require_once '../includes/user_auth.php';
 require_once '../includes/environment.php';
+require_once '../includes/db.php';
 
 // Initialize cart count for header
 $cart_count = 0;
@@ -20,6 +21,7 @@ $reflected_message = isset($_GET['msg']) ? $_GET['msg'] : '';
 // Handle form submission - STORED XSS VULNERABILITY
 $message_sent = false;
 $success_name = '';
+$form_error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
     // VULNERABILITY 1: NO INPUT VALIDATION
@@ -37,24 +39,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
     // Store success name for reflected XSS demonstration
     $success_name = $name;
     
-    // VULNERABLE DATABASE INSERT - No escaping, no prepared statements
-    $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
-    
-    if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
+    try {
+        // Use existing database connection or create if needed
+        if (!isset($conn) || $conn === null || $conn->connect_error) {
+            $conn = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+        }
+        
+        if ($conn->connect_error) {
+            throw new Exception("Connection failed: " . $conn->connect_error);
+        }
+
+        // Auto-create contact_messages table if not exists
+        $conn->query("CREATE TABLE IF NOT EXISTS contact_messages (
+            id INT PRIMARY KEY AUTO_INCREMENT,
+            name VARCHAR(500),
+            email VARCHAR(500),
+            phone VARCHAR(500),
+            subject VARCHAR(500),
+            message LONGTEXT,
+            ip_address VARCHAR(45),
+            user_agent TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )");
+
+        // CRITICAL VULNERABILITY: Using string concatenation instead of prepared statements
+        $sql = "INSERT INTO contact_messages (name, email, phone, subject, message, ip_address, user_agent) 
+                VALUES ('$name', '$email', '$phone', '$subject', '$message', '$ip', '$user_agent')";
+        
+        if ($conn->query($sql) === TRUE) {
+            $message_sent = true;
+        } else {
+            $form_error = "Database Error: " . $conn->error;
+        }
+    } catch (Throwable $e) {
+        $form_error = "Error: " . $e->getMessage();
     }
-    
-    // CRITICAL VULNERABILITY: Using string concatenation instead of prepared statements
-    $sql = "INSERT INTO contact_messages (name, email, phone, subject, message, ip_address, user_agent) 
-            VALUES ('$name', '$email', '$phone', '$subject', '$message', '$ip', '$user_agent')";
-    
-    if ($conn->query($sql) === TRUE) {
-        $message_sent = true;
-    } else {
-        echo "<!-- Database Error (visible in vulnerable mode): " . $conn->error . " -->";
-    }
-    
-    $conn->close();
 }
 ?>
 <!DOCTYPE html>
@@ -392,6 +411,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit_contact'])) {
                     <div class="success-message">
                         <!-- VULNERABILITY: Reflected XSS - User input echoed without escaping -->
                         <i class="bi bi-check-circle"></i> Thank you <strong><?php echo $success_name; ?></strong> for your message! We'll get back to you soon.
+                    </div>
+                <?php endif; ?>
+
+                <?php if (!empty($form_error)): ?>
+                    <div style="background: #f8d7da; border: 1px solid #f5c6cb; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; color: #721c24;">
+                        <i class="bi bi-exclamation-triangle"></i> <?php echo $form_error; ?>
                     </div>
                 <?php endif; ?>
                 

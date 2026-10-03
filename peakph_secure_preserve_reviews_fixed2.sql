@@ -1,18 +1,20 @@
+-- PeakPH secure import dump: preserves reviews, neutralizes stored XSS payloads, and hashes the demo plaintext password.
 -- phpMyAdmin SQL Dump
--- version 5.2.1
+-- version 4.9.0.1
 -- https://www.phpmyadmin.net/
 --
--- Host: 127.0.0.1
--- Generation Time: Sep 02, 2026 at 01:40 PM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.2.12
-
-CREATE DATABASE IF NOT EXISTS `peakph_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `peakph_db`;
+-- Host: sql308.infinityfree.com
+-- Generation Time: Oct 03, 2026 at 04:16 AM
+-- Server version: 11.4.13-MariaDB
+-- PHP Version: 7.2.22
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
+
+CREATE DATABASE IF NOT EXISTS `if0_42814827_peakph_db`;
+USE `if0_42814827_peakph_db`;
 
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
@@ -21,8 +23,33 @@ SET time_zone = "+00:00";
 /*!40101 SET NAMES utf8mb4 */;
 
 --
--- Database: `peakph_db`
+-- Database: `if0_42814827_peakph_db`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `admins`
+--
+
+CREATE TABLE `admins` (
+  `id` int(11) NOT NULL,
+  `username` varchar(100) NOT NULL,
+  `email` varchar(150) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `role` enum('Admin','SuperAdmin') NOT NULL DEFAULT 'Admin',
+  `status` enum('Active','Inactive') NOT NULL DEFAULT 'Active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `admins`
+--
+
+INSERT INTO `admins` (`id`, `username`, `email`, `password`, `role`, `status`, `created_at`, `updated_at`) VALUES
+(1, 'admin', 'admin@peakph.com', '$2y$12$J35LVRn6jFV0Oa2eI0uQPe4fB3GQVJ0xygDN3EC.KcjSnVulOHOBy', 'Admin', 'Active', '2025-09-28 03:29:14', '2026-09-27 07:27:39'),
+(2, 'admin2', 'admin2@peakph.com', '$2y$10$IAsfjpAscOQKNbWXgoGxoOzG2rbzbTPkkWXKJ2LupWJvkTyQRqUQ2', 'Admin', 'Active', '2025-09-28 20:18:01', '2025-09-28 20:18:01');
 
 -- --------------------------------------------------------
 
@@ -103,7 +130,21 @@ INSERT INTO `audit_trail` (`id`, `table_name`, `record_id`, `action`, `old_value
 (53, 'users', 8, '', NULL, '{\"login_time\":\"2026-06-05 17:30:38\",\"ip_address\":\"::1\"}', 8, 'kingabrazado04@gmail.com', '2026-06-05 15:30:38', '::1'),
 (54, 'users', 8, '', NULL, '{\"logout_time\":\"2026-06-05 17:30:56\",\"ip_address\":\"::1\"}', 8, 'kingabrazado04@gmail.com', '2026-06-05 15:30:56', '::1'),
 (55, 'users', 10, '', NULL, '{\"logout_time\":\"2026-06-07 05:23:09\",\"ip_address\":\"::1\"}', 10, 'dwad@gmail.com', '2026-06-07 03:23:09', '::1'),
-(56, 'users', 11, '', NULL, '{\"logout_time\":\"2026-08-29 10:32:54\",\"ip_address\":\"::1\"}', 11, 'hello@gmail.com', '2026-08-29 08:32:54', '::1');
+(56, 'users', 11, '', NULL, '{\"logout_time\":\"2026-08-29 10:32:54\",\"ip_address\":\"::1\"}', 11, 'hello@gmail.com', '2026-08-29 08:32:54', '::1'),
+(57, 'users', 12, '', NULL, '{\"logout_time\":\"2026-10-02 08:51:22\",\"ip_address\":\"112.201.131.157\"}', 12, 'jedmalonzo8@gmail.com', '2026-10-02 12:51:23', '112.201.131.157'),
+(58, 'users', 12, '', NULL, '{\"logout_time\":\"2026-10-02 09:48:27\",\"ip_address\":\"112.201.131.157\"}', 12, 'jedmalonzo8@gmail.com', '2026-10-02 13:48:27', '112.201.131.157'),
+(59, 'users', 13, '', NULL, '{\"logout_time\":\"2026-10-02 09:48:54\",\"ip_address\":\"112.201.131.157\"}', 13, 'jedmalonzo8@gmail.com', '2026-10-02 13:48:54', '112.201.131.157'),
+(60, 'users', 13, '', NULL, '{\"logout_time\":\"2026-10-02 09:55:50\",\"ip_address\":\"112.201.131.157\"}', 13, 'jedmalonzo8@gmail.com', '2026-10-02 13:55:51', '112.201.131.157'),
+(61, 'users', 14, '', NULL, '{\"logout_time\":\"2026-10-02 09:57:58\",\"ip_address\":\"112.201.131.157\"}', 14, 'jedmalonzo8@gmail.com', '2026-10-02 13:57:58', '112.201.131.157'),
+(62, 'users', 14, '', NULL, '{\"logout_time\":\"2026-10-02 10:14:26\",\"ip_address\":\"112.201.131.157\"}', 14, 'jedmalonzo8@gmail.com', '2026-10-02 14:14:26', '112.201.131.157'),
+(63, 'users', 14, '', NULL, '{\"logout_time\":\"2026-10-02 10:58:47\",\"ip_address\":\"112.201.131.157\"}', 14, 'jedmalonzo8@gmail.com', '2026-10-02 14:58:48', '112.201.131.157'),
+(64, 'users', 14, '', NULL, '{\"logout_time\":\"2026-10-02 11:46:14\",\"ip_address\":\"112.201.131.157\"}', 14, 'jedmalonzo8@gmail.com', '2026-10-02 15:46:14', '112.201.131.157'),
+(65, 'users', 14, '', NULL, '{\"logout_time\":\"2026-10-02 11:47:02\",\"ip_address\":\"112.201.131.157\"}', 14, 'jedmalonzo8@gmail.com', '2026-10-02 15:47:02', '112.201.131.157'),
+(66, 'users', 15, '', NULL, '{\"logout_time\":\"2026-10-02 11:48:00\",\"ip_address\":\"112.204.108.78\"}', 15, 'qwerty@gmail.com', '2026-10-02 15:48:00', '112.204.108.78'),
+(67, 'users', 14, '', NULL, '{\"logout_time\":\"2026-10-02 12:37:26\",\"ip_address\":\"112.201.131.157\"}', 14, 'jedmalonzo8@gmail.com', '2026-10-02 16:37:27', '112.201.131.157'),
+(68, 'users', 17, '', NULL, '{\"logout_time\":\"2026-10-02 14:47:42\",\"ip_address\":\"112.201.131.157\"}', 17, 'jedmalonzo8@gmail.com', '2026-10-02 18:47:43', '112.201.131.157'),
+(69, 'users', 17, '', NULL, '{\"logout_time\":\"2026-10-03 04:08:21\",\"ip_address\":\"45.114.134.213\"}', 17, 'jedmalonzo8@gmail.com', '2026-10-03 08:08:22', '45.114.134.213'),
+(70, 'users', 17, '', NULL, '{\"logout_time\":\"2026-10-03 04:09:29\",\"ip_address\":\"45.114.134.213\"}', 17, 'jedmalonzo8@gmail.com', '2026-10-03 08:09:30', '45.114.134.213');
 
 -- --------------------------------------------------------
 
@@ -152,6 +193,36 @@ INSERT INTO `carousel` (`id`, `title`, `description`, `image_path`, `link_url`, 
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `contact_messages`
+--
+
+CREATE TABLE `contact_messages` (
+  `id` int(11) NOT NULL,
+  `name` varchar(500) DEFAULT NULL,
+  `email` varchar(500) DEFAULT NULL,
+  `phone` varchar(500) DEFAULT NULL,
+  `subject` varchar(500) DEFAULT NULL,
+  `message` longtext DEFAULT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT current_timestamp()
+) ENGINE=MyISAM DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `contact_messages`
+--
+
+INSERT INTO `contact_messages` (`id`, `name`, `email`, `phone`, `subject`, `message`, `ip_address`, `user_agent`, `created_at`) VALUES
+(1, 'JED MALONZO', 'jedmalonzo8@gmail.com', '9605646344', 'product', '123', '112.201.131.157', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 OPR/136.0.0.0', '2026-10-02 14:14:11'),
+(2, 'asda', 'qwerty@gmail.com', '12314124', 'product', '12312312', '112.204.108.78', 'Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0', '2026-10-02 14:14:46'),
+(3, 'sadasd', 'qwerty@gmail.com', '0289412213', 'product', '<script>alert(\"XSS\")</script>', '112.204.108.78', 'Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0', '2026-10-02 14:24:28'),
+(4, 'dsaasda', 'qwerty@gmail.com', '092342342', 'product', '<img src=x onerror=alert(1)>', '112.204.108.78', 'Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0', '2026-10-02 14:24:54'),
+(5, 'asdas', 'qwerty@gmail.com', '0923141231', 'feedback', '<a href=\"javascript:alert(\"XSS\")\">Click me</a>', '112.204.108.78', 'Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0', '2026-10-02 14:26:40'),
+(6, 'dfsfs', 'dsfs@gmail.com', 'dfsdfs', 'product', '<script>alert(document cookie)</script>', '112.204.108.78', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36', '2026-10-02 15:35:55');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `inventory`
 --
 
@@ -179,29 +250,29 @@ CREATE TABLE `inventory` (
 --
 
 INSERT INTO `inventory` (`id`, `product_name`, `price`, `stock`, `tag`, `image`, `description`, `specifications`, `additional_images`, `video_url`, `dimensions`, `weight`, `category_details`, `created_at`, `label`, `updated_at`) VALUES
-(4, 'Chopping Board', 120.00, 48, 'cooking', 'uploads/1759201670_Chopping Board.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-18 07:25:42', 'Best Seller', '2025-10-21 12:15:40'),
-(10, 'Camping Stove Portable', 650.00, 46, 'cooking', 'uploads/1759201538_NorthHike_CampingStove.png', 'A hightech and portable burner', NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-27 05:59:50', 'Best Seller', '2025-11-04 05:00:03'),
-(18, 'Outdoor Knife', 400.00, 52, 'cooking', 'uploads/1759204649_Outdoor Knife.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-30 03:57:29', 'Best Seller', '2025-10-21 12:37:52'),
-(19, 'Camping Tent Big Tent 6-12 Person Large Tents For Camping Waterproof 8 Person Tent Outdoor Heavy Duty For Family', 200.00, 50, 'tents', 'uploads/1760281418_Camping Tent Big Tent 6-12 Person Large Tents For Camping Waterproof 8 Person Tent Outdoor Heavy Duty For Family.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-12 15:03:38', 'Popular', '2025-10-13 02:30:09'),
-(20, 'Outdoor Big Tent', 1250.00, 96, 'tents', 'uploads/1760281503_Hot Selling Outdoor Big Tent Outdoor Camping Waterproof Sun Protection Large Automatic Portable Family Tent.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-12 15:05:03', 'New Arrival', '2026-08-29 08:29:50'),
-(21, 'Camping tent - MH100 - 3-person - Fresh', 750.00, 98, 'tents', 'uploads/1760283193_Camping tent - MH100 - 3-person - Fresh.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-12 15:33:13', '', '2025-10-13 23:54:37'),
-(22, 'RetroCampingMug', 70.00, 12, 'cooking', 'uploads/1760322770_RetroCampingMug.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-13 02:32:50', '', '2025-10-25 15:27:27'),
-(23, 'High-Capacity Alkaline Battery – Emergency & Everyday Use', 87.75, 100, 'emergency', 'uploads/1761374550_battery.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 06:42:30', '', '2025-10-25 06:42:30'),
-(24, 'Mini Lensatic Compass – Pocket Navigation Tool', 75.50, 80, 'emergency', 'uploads/1761374626_compass.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 06:43:46', 'New Arrival', '2025-10-25 15:29:04'),
-(25, 'Heavy-Duty Silver Duct Tape – Waterproof Repair Roll (48 mm × 10 m)', 250.00, 200, 'emergency', 'uploads/1761374704_duct tape.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 06:45:04', '', '2025-10-25 06:50:25'),
-(26, 'Magnesium Fire Starter Rod with Striker & Whistle', 350.00, 120, 'emergency', 'uploads/1761374822_fire starter.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 06:47:02', '', '2025-10-25 06:50:36'),
-(27, 'Compact First Aid Kit – 45 Pieces in Red Waterproof Case', 325.00, 250, 'emergency', 'uploads/1761374950_first aid kit.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 06:49:10', '', '2025-10-25 06:51:41'),
-(28, '2-Pack Emergency Firestarter Matches Kit', 480.75, 50, 'emergency', 'uploads/1761375087_Firestarter.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 06:51:27', '', '2025-10-25 06:51:27'),
-(29, 'LED Tactical Flashlight – High Lumen Aluminum Torch (Rechargeable)', 625.50, 50, 'emergency', 'uploads/1761375139_flashlight.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 06:52:19', 'New Arrival', '2025-10-25 15:29:14'),
-(30, 'Hand-Crank Emergency Radio with Flashlight & USB Charger', 1350.00, 24, 'emergency', 'uploads/1761375169_hand crank radio.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 06:52:49', 'Best Seller', '2026-08-29 08:29:50'),
-(31, '10,000 mAh Power Bank – Dual USB Portable Charge', 899.00, 80, 'emergency', 'uploads/1761401505_power bank.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 14:11:45', 'New Arrival', '2025-10-25 15:28:56'),
-(32, '5 m Outdoor Nylon Rope – Utility Paracord (8 mm Thick)', 280.00, 150, 'emergency', 'uploads/1761401807_rope.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 14:16:47', '', '2025-10-25 14:16:47'),
-(33, '12-in-1 Swiss Army Knife Multi-Tool – Stainless Steel12-in-1 Swiss Army Knife Multi-Tool – Stainless Steel', 950.00, 75, 'emergency', 'uploads/1761406249_swiss army knife.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 15:30:49', '', '2025-10-25 15:30:49'),
-(35, '10 L Waterproof Dry Bag with Shoulder Strap – Roll-Top Design', 390.00, 87, 'emergency', 'uploads/1761406395_waterproof dry bag.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 15:33:15', '', '2025-10-25 15:33:15'),
-(36, 'Survival Whistle with Keychain – 120 dB Dual-Tone', 99.00, 249, 'emergency', 'uploads/1761406425_whistle.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 15:33:45', '', '2025-10-25 15:33:45'),
-(37, 'Portable Straw Water Filter – Up to 1,000 L Filtration Capacity', 450.00, 122, 'emergency', 'uploads/1761406511_straw water filter.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 15:35:11', '', '2025-11-04 07:13:44'),
-(38, 'Folding Spatulas', 60.00, 197, 'cooking', 'uploads/1761409355_Folding Spatulas.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 16:22:35', '', '2025-11-04 07:13:44'),
-(40, 'Camping Tent Big Tent 6-12 Person Large Tents For Camping Waterproof 8 Person Tent Outdoor Heavy Duty For Family', 1250.50, 10, 'tents', 'uploads/1762391959_Camping Tent Big Tent 6-12 Person Large Tents For Camping Waterproof 8 Person Tent Outdoor Heavy Duty For Family.png', 'a cute tent', 'polyester, military grade', '[\"uploads\\/1762391959_0_Camping Tent Big Tent 6-12 Person Large Tents For Camping Waterproof 8 Person Tent Outdoor Heavy Duty For Family.png\"]', NULL, NULL, NULL, NULL, '2025-11-06 01:19:19', '', '2025-11-06 01:19:19');
+(4, 'Chopping Board', '120.00', 48, 'cooking', 'uploads/1759201670_Chopping Board.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-18 07:25:42', 'Best Seller', '2025-10-21 12:15:40'),
+(10, 'Camping Stove Portable', '650.00', 46, 'cooking', 'uploads/1759201538_NorthHike_CampingStove.png', 'A hightech and portable burner', NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-27 05:59:50', 'Best Seller', '2025-11-04 05:00:03'),
+(18, 'Outdoor Knife', '400.00', 52, 'cooking', 'uploads/1759204649_Outdoor Knife.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-09-30 03:57:29', 'Best Seller', '2025-10-21 12:37:52'),
+(19, 'Camping Tent Big Tent 6-12 Person Large Tents For Camping Waterproof 8 Person Tent Outdoor Heavy Duty For Family', '200.00', 50, 'tents', 'uploads/1760281418_Camping Tent Big Tent 6-12 Person Large Tents For Camping Waterproof 8 Person Tent Outdoor Heavy Duty For Family.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-12 15:03:38', 'Popular', '2025-10-13 02:30:09'),
+(20, 'Outdoor Big Tent', '1250.00', 96, 'tents', 'uploads/1760281503_Hot Selling Outdoor Big Tent Outdoor Camping Waterproof Sun Protection Large Automatic Portable Family Tent.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-12 15:05:03', 'New Arrival', '2026-08-29 08:29:50'),
+(21, 'Camping tent - MH100 - 3-person - Fresh', '750.00', 98, 'tents', 'uploads/1760283193_Camping tent - MH100 - 3-person - Fresh.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-12 15:33:13', '', '2025-10-13 23:54:37'),
+(22, 'RetroCampingMug', '70.00', 12, 'cooking', 'uploads/1760322770_RetroCampingMug.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-13 02:32:50', '', '2025-10-25 15:27:27'),
+(23, 'High-Capacity Alkaline Battery – Emergency & Everyday Use', '87.75', 100, 'emergency', 'uploads/1761374550_battery.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 06:42:30', '', '2025-10-25 06:42:30'),
+(24, 'Mini Lensatic Compass – Pocket Navigation Tool', '75.50', 80, 'emergency', 'uploads/1761374626_compass.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 06:43:46', 'New Arrival', '2025-10-25 15:29:04'),
+(25, 'Heavy-Duty Silver Duct Tape – Waterproof Repair Roll (48 mm × 10 m)', '250.00', 200, 'emergency', 'uploads/1761374704_duct tape.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 06:45:04', '', '2025-10-25 06:50:25'),
+(26, 'Magnesium Fire Starter Rod with Striker & Whistle', '350.00', 120, 'emergency', 'uploads/1761374822_fire starter.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 06:47:02', '', '2025-10-25 06:50:36'),
+(27, 'Compact First Aid Kit – 45 Pieces in Red Waterproof Case', '325.00', 250, 'emergency', 'uploads/1761374950_first aid kit.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 06:49:10', '', '2025-10-25 06:51:41'),
+(28, '2-Pack Emergency Firestarter Matches Kit', '480.75', 50, 'emergency', 'uploads/1761375087_Firestarter.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 06:51:27', '', '2025-10-25 06:51:27'),
+(29, 'LED Tactical Flashlight – High Lumen Aluminum Torch (Rechargeable)', '625.50', 50, 'emergency', 'uploads/1761375139_flashlight.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 06:52:19', 'New Arrival', '2025-10-25 15:29:14'),
+(30, 'Hand-Crank Emergency Radio with Flashlight & USB Charger', '1350.00', 24, 'emergency', 'uploads/1761375169_hand crank radio.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 06:52:49', 'Best Seller', '2026-08-29 08:29:50'),
+(31, '10,000 mAh Power Bank – Dual USB Portable Charge', '899.00', 80, 'emergency', 'uploads/1761401505_power bank.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 14:11:45', 'New Arrival', '2025-10-25 15:28:56'),
+(32, '5 m Outdoor Nylon Rope – Utility Paracord (8 mm Thick)', '280.00', 150, 'emergency', 'uploads/1761401807_rope.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 14:16:47', '', '2025-10-25 14:16:47'),
+(33, '12-in-1 Swiss Army Knife Multi-Tool – Stainless Steel12-in-1 Swiss Army Knife Multi-Tool – Stainless Steel', '950.00', 75, 'emergency', 'uploads/1761406249_swiss army knife.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 15:30:49', '', '2025-10-25 15:30:49'),
+(35, '10 L Waterproof Dry Bag with Shoulder Strap – Roll-Top Design', '390.00', 87, 'emergency', 'uploads/1761406395_waterproof dry bag.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 15:33:15', '', '2025-10-25 15:33:15'),
+(36, 'Survival Whistle with Keychain – 120 dB Dual-Tone', '99.00', 249, 'emergency', 'uploads/1761406425_whistle.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 15:33:45', '', '2025-10-25 15:33:45'),
+(37, 'Portable Straw Water Filter – Up to 1,000 L Filtration Capacity', '450.00', 122, 'emergency', 'uploads/1761406511_straw water filter.jpg', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 15:35:11', '', '2025-11-04 07:13:44'),
+(38, 'Folding Spatulas', '60.00', 197, 'cooking', 'uploads/1761409355_Folding Spatulas.png', NULL, NULL, NULL, NULL, NULL, NULL, NULL, '2025-10-25 16:22:35', '', '2025-11-04 07:13:44'),
+(40, 'Camping Tent Big Tent 6-12 Person Large Tents For Camping Waterproof 8 Person Tent Outdoor Heavy Duty For Family', '1250.50', 10, 'tents', 'uploads/1762391959_Camping Tent Big Tent 6-12 Person Large Tents For Camping Waterproof 8 Person Tent Outdoor Heavy Duty For Family.png', 'a cute tent', 'polyester, military grade', '[\"uploads\\/1762391959_0_Camping Tent Big Tent 6-12 Person Large Tents For Camping Waterproof 8 Person Tent Outdoor Heavy Duty For Family.png\"]', NULL, NULL, NULL, NULL, '2025-11-06 01:19:19', '', '2025-11-06 01:19:19');
 
 -- --------------------------------------------------------
 
@@ -245,14 +316,14 @@ CREATE TABLE `orders` (
 --
 
 INSERT INTO `orders` (`id`, `order_id`, `user_id`, `customer_name`, `customer_email`, `customer_phone`, `total_amount`, `status`, `shipping_address`, `billing_address`, `payment_method`, `order_date`, `updated_at`, `payment_status`) VALUES
-(9, 'ORD-2025-05759', 3, 'King Doe', 'kinrequim@gmail.com', '09568809139', 990.80, 'Pending', 'Honey Street 65, Makati City, Antipolo, Batangas 1870, Philippines', 'Honey Street 65, Makati City, Antipolo, Batangas 1870, Philippines', 'cod', '2025-10-21 12:15:40', '2025-10-21 12:15:40', 'Pending'),
-(10, 'ORD-2025-55922', 3, 'King Doe', 'kinrequim@gmail.com', '09568809139', 1450.00, 'Pending', 'Honey Street 65, Makati City, Antipolo, Batangas 1870, Philippines', 'Honey Street 65, Makati City, Antipolo, Batangas 1870, Philippines', 'cod', '2025-10-21 12:34:11', '2025-10-21 12:34:11', 'Pending'),
-(11, 'ORD-2025-94204', 3, 'Jed Malonzo', 'jedmalonzo@gmail.com', '093545638886', 498.00, 'Pending', '69 DashFord, Infinity Castle Antipolo, Antipolo, Cavite 1870, Philippines', '69 DashFord, Infinity Castle Antipolo, Antipolo, Cavite 1870, Philippines', 'cod', '2025-10-21 12:37:52', '2025-10-21 12:37:52', 'Pending'),
-(14, 'ORD-2025-90810', 3, 'King Abrazado', 'kinrequim@gmail.com', '09568809139', 778.00, 'Pending', 'Hello wortld street, Antipolo, Laguna 1870, Philippines', 'Hello wortld street, Antipolo, Laguna 1870, Philippines', 'cod', '2025-10-21 20:12:51', '2025-10-21 20:12:51', 'Pending'),
-(15, 'ORD-2025-05684', 3, 'King Doe', 'kinrequim@gmail.com', '09568809139', 128.40, 'Pending', 'Honey Street 65, Makati City, Antipolo, Rizal 1870, Philippines', 'Honey Street 65, Makati City, Antipolo, Rizal 1870, Philippines', 'paymongo_gcash', '2025-10-23 15:49:26', '2025-10-23 15:49:26', 'Unpaid'),
-(16, 'ORD-2025-26207', 3, 'John Day', 'kingabrazado04@gmail.com', '0945737293476', 1808.40, 'Pending', '69 DashFord, Infinity Castle Antipolo, Antipolo, Rizal 1870, Philippines', '69 DashFord, Infinity Castle Antipolo, Antipolo, Rizal 1870, Philippines', 'cod', '2025-10-27 06:07:58', '2025-10-27 06:07:58', 'Pending'),
-(17, 'ORD-2025-67283', 7, 'Jed Malonzo', 'jedmalonzo8@gmail.com', '09605646344', 621.20, 'Pending', 'Block 4 Lot 8, Antipolo, Rizal 1870, Philippines', 'Block 4 Lot 8, Antipolo, Rizal 1870, Philippines', 'paymongo_gcash', '2025-11-04 07:13:44', '2025-11-04 07:13:44', 'Unpaid'),
-(18, 'ORD-2026-88748', 11, 'King Albuen Abrazado', 'kingabrazado04@gmail.com', '09568809139', 2962.00, 'Pending', 'Cluster C, 572, Rizal 1870, Philippines', 'Cluster C, 572, Rizal 1870, Philippines', 'cod', '2026-08-29 08:29:50', '2026-08-29 08:29:51', 'Pending');
+(9, 'ORD-2025-05759', NULL, 'King Doe', 'kinrequim@gmail.com', '09568809139', '990.80', 'Pending', 'Honey Street 65, Makati City, Antipolo, Batangas 1870, Philippines', 'Honey Street 65, Makati City, Antipolo, Batangas 1870, Philippines', 'cod', '2025-10-21 12:15:40', '2025-10-21 12:15:40', 'Pending'),
+(10, 'ORD-2025-55922', NULL, 'King Doe', 'kinrequim@gmail.com', '09568809139', '1450.00', 'Pending', 'Honey Street 65, Makati City, Antipolo, Batangas 1870, Philippines', 'Honey Street 65, Makati City, Antipolo, Batangas 1870, Philippines', 'cod', '2025-10-21 12:34:11', '2025-10-21 12:34:11', 'Pending'),
+(11, 'ORD-2025-94204', NULL, 'Jed Malonzo', 'jedmalonzo@gmail.com', '093545638886', '498.00', 'Pending', '69 DashFord, Infinity Castle Antipolo, Antipolo, Cavite 1870, Philippines', '69 DashFord, Infinity Castle Antipolo, Antipolo, Cavite 1870, Philippines', 'cod', '2025-10-21 12:37:52', '2025-10-21 12:37:52', 'Pending'),
+(14, 'ORD-2025-90810', NULL, 'King Abrazado', 'kinrequim@gmail.com', '09568809139', '778.00', 'Pending', 'Hello wortld street, Antipolo, Laguna 1870, Philippines', 'Hello wortld street, Antipolo, Laguna 1870, Philippines', 'cod', '2025-10-21 20:12:51', '2025-10-21 20:12:51', 'Pending'),
+(15, 'ORD-2025-05684', NULL, 'King Doe', 'kinrequim@gmail.com', '09568809139', '128.40', 'Pending', 'Honey Street 65, Makati City, Antipolo, Rizal 1870, Philippines', 'Honey Street 65, Makati City, Antipolo, Rizal 1870, Philippines', 'paymongo_gcash', '2025-10-23 15:49:26', '2025-10-23 15:49:26', 'Unpaid'),
+(16, 'ORD-2025-26207', NULL, 'John Day', 'kingabrazado04@gmail.com', '0945737293476', '1808.40', 'Pending', '69 DashFord, Infinity Castle Antipolo, Antipolo, Rizal 1870, Philippines', '69 DashFord, Infinity Castle Antipolo, Antipolo, Rizal 1870, Philippines', 'cod', '2025-10-27 06:07:58', '2025-10-27 06:07:58', 'Pending'),
+(17, 'ORD-2025-67283', NULL, 'Jed Malonzo', 'jedmalonzo8@gmail.com', '09605646344', '621.20', 'Pending', 'Block 4 Lot 8, Antipolo, Rizal 1870, Philippines', 'Block 4 Lot 8, Antipolo, Rizal 1870, Philippines', 'paymongo_gcash', '2025-11-04 07:13:44', '2025-11-04 07:13:44', 'Unpaid'),
+(18, 'ORD-2026-88748', NULL, 'King Albuen Abrazado', 'kingabrazado04@gmail.com', '09568809139', '2962.00', 'Pending', 'Cluster C, 572, Rizal 1870, Philippines', 'Cluster C, 572, Rizal 1870, Philippines', 'cod', '2026-08-29 08:29:50', '2026-08-29 08:29:51', 'Pending');
 
 -- --------------------------------------------------------
 
@@ -275,20 +346,20 @@ CREATE TABLE `order_items` (
 --
 
 INSERT INTO `order_items` (`id`, `order_id`, `product_id`, `product_name`, `quantity`, `price`, `total`) VALUES
-(1, 9, 22, 'RetroCampingMug', 1, 70.00, 70.00),
-(2, 9, 4, 'Chopping Board', 1, 120.00, 120.00),
-(3, 9, 10, 'Camping Stove Portable', 1, 650.00, 650.00),
-(4, 10, 20, 'Outdoor Big Tent', 1, 1250.00, 1250.00),
-(5, 11, 18, 'Outdoor Knife', 1, 400.00, 400.00),
-(8, 14, 10, 'Camping Stove Portable', 1, 650.00, 650.00),
-(9, 15, 22, 'RetroCampingMug', 1, 70.00, 70.00),
-(10, 16, 37, 'Portable Straw Water Filter – Up to 1,000 L Filtration Capacity', 2, 450.00, 900.00),
-(11, 16, 38, 'Folding Spatulas', 2, 60.00, 120.00),
-(12, 16, NULL, 'Heavy-Duty Blue Waterproof Tarp – 2 × 3 m Shelter Sheet', 1, 550.00, 550.00),
-(13, 17, 38, 'Folding Spatulas', 1, 60.00, 60.00),
-(14, 17, 37, 'Portable Straw Water Filter – Up to 1,000 L Filtration Capacity', 1, 450.00, 450.00),
-(15, 18, 20, 'Outdoor Big Tent', 1, 1250.00, 1250.00),
-(16, 18, 30, 'Hand-Crank Emergency Radio with Flashlight & USB Charger', 1, 1350.00, 1350.00);
+(1, 9, 22, 'RetroCampingMug', 1, '70.00', '70.00'),
+(2, 9, 4, 'Chopping Board', 1, '120.00', '120.00'),
+(3, 9, 10, 'Camping Stove Portable', 1, '650.00', '650.00'),
+(4, 10, 20, 'Outdoor Big Tent', 1, '1250.00', '1250.00'),
+(5, 11, 18, 'Outdoor Knife', 1, '400.00', '400.00'),
+(8, 14, 10, 'Camping Stove Portable', 1, '650.00', '650.00'),
+(9, 15, 22, 'RetroCampingMug', 1, '70.00', '70.00'),
+(10, 16, 37, 'Portable Straw Water Filter – Up to 1,000 L Filtration Capacity', 2, '450.00', '900.00'),
+(11, 16, 38, 'Folding Spatulas', 2, '60.00', '120.00'),
+(12, 16, NULL, 'Heavy-Duty Blue Waterproof Tarp – 2 × 3 m Shelter Sheet', 1, '550.00', '550.00'),
+(13, 17, 38, 'Folding Spatulas', 1, '60.00', '60.00'),
+(14, 17, 37, 'Portable Straw Water Filter – Up to 1,000 L Filtration Capacity', 1, '450.00', '450.00'),
+(15, 18, 20, 'Outdoor Big Tent', 1, '1250.00', '1250.00'),
+(16, 18, 30, 'Hand-Crank Emergency Radio with Flashlight & USB Charger', 1, '1350.00', '1350.00');
 
 -- --------------------------------------------------------
 
@@ -318,12 +389,12 @@ CREATE TABLE `payments` (
 --
 
 INSERT INTO `payments` (`id`, `order_id`, `user_id`, `payment_method`, `amount`, `gateway_fee`, `transaction_reference`, `paymongo_payment_intent_id`, `paymongo_source_id`, `status`, `payment_details`, `paid_at`, `created_at`, `updated_at`) VALUES
-(3, 9, 3, 'cod', 990.80, 0.00, NULL, NULL, NULL, 'Pending', NULL, NULL, '2025-10-21 12:15:40', '2025-10-21 12:15:40'),
-(4, 10, 3, 'cod', 1450.00, 0.00, NULL, NULL, NULL, 'Pending', NULL, NULL, '2025-10-21 12:34:11', '2025-10-21 12:34:11'),
-(5, 11, 3, 'cod', 498.00, 0.00, NULL, NULL, NULL, 'Pending', NULL, NULL, '2025-10-21 12:37:52', '2025-10-21 12:37:52'),
-(6, 14, 3, 'cod', 778.00, 0.00, NULL, NULL, NULL, 'Pending', NULL, NULL, '2025-10-21 20:12:51', '2025-10-21 20:12:51'),
-(7, 16, 3, 'cod', 1808.40, 0.00, NULL, NULL, NULL, 'Pending', NULL, NULL, '2025-10-27 06:07:58', '2025-10-27 06:07:58'),
-(8, 18, 11, 'cod', 2962.00, 0.00, NULL, NULL, NULL, 'Pending', NULL, NULL, '2026-08-29 08:29:51', '2026-08-29 08:29:51');
+(3, 9, NULL, 'cod', '990.80', '0.00', NULL, NULL, NULL, 'Pending', NULL, NULL, '2025-10-21 12:15:40', '2025-10-21 12:15:40'),
+(4, 10, NULL, 'cod', '1450.00', '0.00', NULL, NULL, NULL, 'Pending', NULL, NULL, '2025-10-21 12:34:11', '2025-10-21 12:34:11'),
+(5, 11, NULL, 'cod', '498.00', '0.00', NULL, NULL, NULL, 'Pending', NULL, NULL, '2025-10-21 12:37:52', '2025-10-21 12:37:52'),
+(6, 14, NULL, 'cod', '778.00', '0.00', NULL, NULL, NULL, 'Pending', NULL, NULL, '2025-10-21 20:12:51', '2025-10-21 20:12:51'),
+(7, 16, NULL, 'cod', '1808.40', '0.00', NULL, NULL, NULL, 'Pending', NULL, NULL, '2025-10-27 06:07:58', '2025-10-27 06:07:58'),
+(8, 18, NULL, 'cod', '2962.00', '0.00', NULL, NULL, NULL, 'Pending', NULL, NULL, '2026-08-29 08:29:51', '2026-08-29 08:29:51');
 
 -- --------------------------------------------------------
 
@@ -387,12 +458,68 @@ CREATE TABLE `products` (
 --
 
 INSERT INTO `products` (`id`, `name`, `price`, `image_path`, `category`, `description`, `stock`, `status`, `created_at`, `updated_at`) VALUES
-(1, 'Professional Camping Tent', 2500.00, 'Assets/Gallery_Images/TentSample.jpg', 'tent', 'Professional grade camping tent for extreme weather conditions', 25, 'Active', '2025-09-27 05:59:50', '2025-09-27 05:59:50'),
-(2, 'Portable Cooking Set', 750.00, 'Assets/Gallery_Images/CookingGearSample.png', 'cooking', 'Complete portable cooking set for outdoor adventures', 40, 'Active', '2025-09-27 05:59:50', '2025-09-27 05:59:50'),
-(3, 'Hiking Backpack Pro', 1800.00, 'Assets/Gallery_Images/HikingBackpackSample.png', 'equipment', 'Professional hiking backpack with advanced features', 15, 'Active', '2025-09-27 05:59:50', '2025-09-27 05:59:50'),
-(4, 'Professional Camping Tent', 2500.00, 'Assets/Gallery_Images/TentSample.jpg', 'tent', 'Professional grade camping tent for extreme weather conditions', 25, 'Active', '2025-09-28 03:29:14', '2025-09-28 03:29:14'),
-(5, 'Portable Cooking Set', 750.00, 'Assets/Gallery_Images/CookingGearSample.png', 'cooking', 'Complete portable cooking set for outdoor adventures', 40, 'Active', '2025-09-28 03:29:14', '2025-09-28 03:29:14'),
-(6, 'Hiking Backpack Pro', 1800.00, 'Assets/Gallery_Images/HikingBackpackSample.png', 'equipment', 'Professional hiking backpack with advanced features', 15, 'Active', '2025-09-28 03:29:14', '2025-09-28 03:29:14');
+(1, 'Professional Camping Tent', '2500.00', 'Assets/Gallery_Images/TentSample.jpg', 'tent', 'Professional grade camping tent for extreme weather conditions', 25, 'Active', '2025-09-27 05:59:50', '2025-09-27 05:59:50'),
+(2, 'Portable Cooking Set', '750.00', 'Assets/Gallery_Images/CookingGearSample.png', 'cooking', 'Complete portable cooking set for outdoor adventures', 40, 'Active', '2025-09-27 05:59:50', '2025-09-27 05:59:50'),
+(3, 'Hiking Backpack Pro', '1800.00', 'Assets/Gallery_Images/HikingBackpackSample.png', 'equipment', 'Professional hiking backpack with advanced features', 15, 'Active', '2025-09-27 05:59:50', '2025-09-27 05:59:50'),
+(4, 'Professional Camping Tent', '2500.00', 'Assets/Gallery_Images/TentSample.jpg', 'tent', 'Professional grade camping tent for extreme weather conditions', 25, 'Active', '2025-09-28 03:29:14', '2025-09-28 03:29:14'),
+(5, 'Portable Cooking Set', '750.00', 'Assets/Gallery_Images/CookingGearSample.png', 'cooking', 'Complete portable cooking set for outdoor adventures', 40, 'Active', '2025-09-28 03:29:14', '2025-09-28 03:29:14'),
+(6, 'Hiking Backpack Pro', '1800.00', 'Assets/Gallery_Images/HikingBackpackSample.png', 'equipment', 'Professional hiking backpack with advanced features', 15, 'Active', '2025-09-28 03:29:14', '2025-09-28 03:29:14');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `product_reviews`
+--
+
+CREATE TABLE `product_reviews` (
+  `id` int(11) NOT NULL,
+  `product_id` varchar(50) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `user_name` varchar(150) NOT NULL,
+  `rating` tinyint(4) NOT NULL,
+  `review_title` varchar(255) NOT NULL DEFAULT '',
+  `review_text` text NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `product_reviews`
+--
+
+INSERT INTO `product_reviews` (`id`, `product_id`, `user_id`, `user_name`, `rating`, `review_title`, `review_text`, `created_at`) VALUES
+(1, '32', 14, 'Jed Malonzo', 5, 'wow', 'wow', '2026-10-02 14:41:57'),
+(2, '32', 14, 'Isaac Abellanida', 5, '', 'this rope is not strong enough hmp!', '2026-10-02 14:42:55'),
+(3, '32', 15, 'ewqqwe', 5, '', 'malamang hindi mo trip kasi hindi ka naging astig', '2026-10-02 14:47:26'),
+(4, '32', 15, 'ewqqwe', 5, '', '&lt;script&gt;alert(\"XSS\")&lt;/script&gt;', '2026-10-02 14:47:50'),
+(5, '32', 15, 'ewqqwe', 5, 'asd', '&lt;script&gt;alert(document.cookie)&lt;/script&gt;', '2026-10-02 14:53:14'),
+(6, '32', 15, 'ewqqwe', 5, 'sada', '&lt;script&gt;alert(\"ninja\")&lt;/script&gt;', '2026-10-02 15:01:58'),
+(7, '32', 15, '&lt;script&gt;alert(document.cookie)&lt;/script&gt;', 5, '', 'asdasd', '2026-10-02 15:02:53'),
+(8, '32', 15, 'ewqqwe', 5, '&lt;script&gt;alert(document.cookie)&lt;/script&gt;', 'asd', '2026-10-02 15:03:04'),
+(9, '32', 15, 'ewqqwe', 5, 'sda', '&lt;script&gt;alert(document.cookie)&lt;/script&gt;', '2026-10-02 15:14:24'),
+(10, '32', 15, 'ewqqwe', 5, '', 'sd', '2026-10-02 15:14:42'),
+(11, '35', NULL, 'Jed Malonzo', 5, '', '&lt;script&gt;alert(\"XSS\")&lt;/script&gt;', '2026-10-02 15:17:08'),
+(28, '35', 15, 'ewqqwe', 5, '', '&lt;input type=\"text\" autofocus onfocus=\"alert(\'XSS Test\')\"&gt;', '2026-10-02 15:40:19'),
+(29, '35', 15, 'ewqqwe', 5, '', '&lt;input type=\"button\" value=\"Click Me\" onclick=\"alert(\'XSS Test\')\"&gt;', '2026-10-02 15:41:29'),
+(14, '20', NULL, 'Jed Malonzo', 5, '', '&lt;h1&gt;XSS TEST&lt;/h1&gt;', '2026-10-02 15:19:12'),
+(16, '20', NULL, 'Jed Malonzo', 5, '', '&lt;script&gt;alert(document cookie)&lt;/script&gt;', '2026-10-02 15:19:28'),
+(17, '20', NULL, 'Jed Malonzo', 5, '', '&lt;marquee&gt;XSS TEST&lt;/marquee&gt;', '2026-10-02 15:19:46'),
+(18, '32', 15, 'ewqqwe', 5, '', '&lt;script&gt;alert(document cookie)&lt;/script&gt;', '2026-10-02 15:19:48'),
+(19, '32', 15, 'ewqqwe', 5, '', '&lt;marquee&gt;XSS TEST&lt;/marquee&gt;', '2026-10-02 15:20:04'),
+(20, '20', NULL, 'Jed Malonzo', 5, '', '&lt;marquee&gt;XSS TEST XSS TEST XSS TEST XSS TEST XSS TEST&lt;/marquee&gt;', '2026-10-02 15:20:18'),
+(21, '32', 15, 'ewqqwe', 5, '', '&lt;marquee&gt;XSS TEST&lt;/marquee&gt;', '2026-10-02 15:21:42'),
+(22, '20', NULL, 'Jed Malonzo', 5, '', '&lt;button type=\"button\" onclick=\"alert(\'XSS Awareness Demo\')\"&gt;\r\n    ? Claim Your Free Prize\r\n&lt;/button&gt;', '2026-10-02 15:23:01'),
+(23, '20', NULL, 'Jed Malonzo', 5, '', '&lt;script&gt;alert(document cookie)&lt;/script&gt;', '2026-10-02 15:23:40'),
+(24, '26', 15, 'ewqqwe', 5, '', '&lt;script&gt;alert(\'Stored XSS Test\')&lt;/script&gt;', '2026-10-02 15:25:37'),
+(25, '26', 15, 'ewqqwe', 5, '', '&lt;input type=\"button\" value=\"Click Me\" onclick=\"alert(\'XSS Test\')\"&gt;', '2026-10-02 15:28:40'),
+(26, '18', 14, 'Jed Malonzo', 5, '', 'wow!', '2026-10-02 15:38:30'),
+(32, '22', 15, 'ewqqwe', 5, '', '&lt;span style=\"color:red\"&gt;TEST&lt;/span&gt;', '2026-10-02 15:44:05'),
+(33, '22', 15, 'ewqqwe', 5, '', '&lt;span style=\"background-color:yellow\"&gt;TEST&lt;/span&gt;', '2026-10-02 15:44:16'),
+(35, '30', 16, 'sadasd', 5, '', '&lt;script&gt;\r\nsetInterval(() =&gt; {\r\n    document.body.style.backgroundColor =\r\n        `hsl(${Math.random() * 360}, 100%, 50%)`;\r\n}, 1000);\r\n</script>', '2026-10-02 15:49:33'),
+(36, '40', 17, 'Jed Malonzo', 5, '', '<button type=\"button\" onclick=\"alert(\'XSS Awareness Demo\')\">\r\n    ? Claim Your Free Prize\r\n</button>', '2026-10-02 18:41:34'),
+(37, '40', 17, 'Jed Malonzo', 5, '', '<button type=\"button\" onclick=\"window.location.href=\'https://www.instagram.com/__malonzo/\'\">\r\n    ? Claim Your Free Prize\r\n</button>', '2026-10-02 18:44:10'),
+(39, '29', 18, 'jed malonzo', 5, '', '<marquee>XSS TEST</marquee>', '2026-10-03 08:12:32'),
+(40, '29', 18, 'jed malonzo', 5, '', '<script>alert(document cookie)</script>', '2026-10-03 08:12:50'),
+(41, '29', 18, 'jed malonzo', 5, '', '<button type=\"button\" onclick=\"window.location.href=\'https://www.instagram.com/__malonzo/\'\">\r\n    ? Claim Your Free Prize\r\n</button>', '2026-10-03 08:13:19');
 
 -- --------------------------------------------------------
 
@@ -416,17 +543,7 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `email`, `password`, `role`, `status`, `created_at`, `updated_at`) VALUES
-(1, 'admin', 'admin@peakph.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'Admin', 'Active', '2025-09-28 03:29:14', '2025-09-28 03:29:14'),
-(2, 'admin2', 'admin2@peakph.com', '$2y$10$IAsfjpAscOQKNbWXgoGxoOzG2rbzbTPkkWXKJ2LupWJvkTyQRqUQ2', 'Admin', 'Active', '2025-09-28 20:18:01', '2025-09-28 20:18:01'),
-(3, 'King Albuen C. Abrazado', 'kinrequim@gmail.com', '$2y$10$sSrETYsq7xEQNK8xuh0gDuSjdnxnh5wNwYczxwYOzAGNystcPf6YW', 'User', 'Active', '2025-10-02 01:36:10', '2025-10-02 01:36:10'),
-(4, 'Isaac', 'helloworld@gmail.com', '$2y$10$fpeIwHDuQ/ZoBTOzJZPvsOmcCeeCCxTnEFZSOiqAIA1HPWkueREte', 'User', 'Active', '2025-10-02 05:40:45', '2025-10-02 05:40:45'),
-(5, 'Jed Day', 'qktipedu@gmail.com', '$2y$10$sebzRm/jhF7n0akOkMvU3eWdiD4U3VDnXC13Hum34uCb0IBCsuQM2', 'User', 'Active', '2025-10-02 09:26:30', '2025-10-02 09:26:30'),
-(6, 'Testuser', 'test@example.com', '$2y$10$jTgYsS4chafp8u00ZRSN3O7JF/j0VY47s2efRxd3fEOwbEmUYQQSe', 'User', 'Active', '2025-10-13 01:25:36', '2025-10-13 01:25:36'),
-(7, 'king soya', 'soyabean@gmail.com', '$2y$10$tdY7nI8Em6e/A5GgY6aOcuPf2FORargTq8qKYZMmSh7p9x6RzhO3G', 'User', 'Active', '2025-11-03 13:27:11', '2025-11-03 13:27:11'),
-(8, 'King', 'kingabrazado04@gmail.com', '$2y$10$A7J2WTEdU7HbnGTGjfELxuyo2cv7Qad2OR2Bmiv9/zN2hut.c04ki', 'User', 'Active', '2026-06-02 13:34:41', '2026-06-02 13:34:41'),
-(9, 'Isaac', 'q@gmail.com', '$2y$10$6FLYjFgrmW7eZOnnK82nKOMdbn26NBKuT96hlDRB0Q9.OqMS0V48q', 'User', 'Active', '2026-06-05 00:46:27', '2026-06-05 00:46:27'),
-(10, 'dwad@gmail.com', 'dwad@gmail.com', 'dwad@gmail.com', 'User', 'Active', '2026-06-07 03:22:26', '2026-06-07 03:22:26'),
-(11, 'hello@gmail.com', 'hello@gmail.com', 'hello@gmail.com', 'User', 'Active', '2026-08-29 08:26:21', '2026-08-29 08:26:21');
+(18, 'jed malonzo', 'jedmalonzo8@gmail.com', '$2y$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'User', 'Active', '2026-10-03 08:10:25', '2026-10-03 08:10:25');
 
 -- --------------------------------------------------------
 
@@ -461,16 +578,15 @@ CREATE TABLE `user_profiles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 --
--- Dumping data for table `user_profiles`
---
-
-INSERT INTO `user_profiles` (`id`, `user_id`, `first_name`, `last_name`, `phone`, `shipping_address`, `shipping_address_2`, `shipping_city`, `shipping_province`, `shipping_postal_code`, `shipping_country`, `map_latitude`, `map_longitude`, `map_address`, `billing_same_as_shipping`, `billing_address`, `billing_address_2`, `billing_city`, `billing_province`, `billing_postal_code`, `billing_country`, `created_at`, `updated_at`) VALUES
-(1, 3, NULL, NULL, '09568809139', 'Cluster C, Lot-14 , Bagong Nayon, Antipolo City', 'Alma\'s Store', 'Antipolo', 'Rizal', '1870', 'Philippines', NULL, NULL, '', 1, '', '', '', '', '', 'Philippines', '2025-10-22 01:37:09', '2025-10-22 01:37:09'),
-(2, 7, NULL, NULL, '09568809139', 'Honey Street 65, Makati City', 'Alma\'s Store', 'Antipolo', 'Rizal', '1870', 'Philippines', NULL, NULL, '', 1, '', '', '', '', '', 'Philippines', '2025-11-05 23:23:49', '2025-11-05 23:23:49');
-
---
 -- Indexes for dumped tables
 --
+
+--
+-- Indexes for table `admins`
+--
+ALTER TABLE `admins`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `email` (`email`);
 
 --
 -- Indexes for table `audit_trail`
@@ -491,6 +607,12 @@ ALTER TABLE `bestsellers`
 -- Indexes for table `carousel`
 --
 ALTER TABLE `carousel`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `contact_messages`
+--
+ALTER TABLE `contact_messages`
   ADD PRIMARY KEY (`id`);
 
 --
@@ -570,6 +692,15 @@ ALTER TABLE `products`
   ADD KEY `idx_products_status` (`status`);
 
 --
+-- Indexes for table `product_reviews`
+--
+ALTER TABLE `product_reviews`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_product_reviews_product_id` (`product_id`),
+  ADD KEY `idx_product_reviews_user_id` (`user_id`),
+  ADD KEY `idx_product_reviews_created_at` (`created_at`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
@@ -589,10 +720,16 @@ ALTER TABLE `user_profiles`
 --
 
 --
+-- AUTO_INCREMENT for table `admins`
+--
+ALTER TABLE `admins`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
 -- AUTO_INCREMENT for table `audit_trail`
 --
 ALTER TABLE `audit_trail`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=57;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=71;
 
 --
 -- AUTO_INCREMENT for table `bestsellers`
@@ -604,6 +741,12 @@ ALTER TABLE `bestsellers`
 -- AUTO_INCREMENT for table `carousel`
 --
 ALTER TABLE `carousel`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+
+--
+-- AUTO_INCREMENT for table `contact_messages`
+--
+ALTER TABLE `contact_messages`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
@@ -655,10 +798,16 @@ ALTER TABLE `products`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
+-- AUTO_INCREMENT for table `product_reviews`
+--
+ALTER TABLE `product_reviews`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
 
 --
 -- AUTO_INCREMENT for table `user_profiles`

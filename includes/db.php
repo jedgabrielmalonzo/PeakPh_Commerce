@@ -15,7 +15,7 @@ if ($is_production) {
     $host = "localhost";
     $user = "root";
     $pass = "";
-    $dbname = "peakph_db";
+    $dbname = "if0_42814827_peakph_db";
 }
 
 $db_connection_error = false;

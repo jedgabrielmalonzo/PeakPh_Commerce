@@ -1664,12 +1664,12 @@ if ($reviews_count === 0 && !isset($_GET['review_submitted'])) {
               </div>
 
               <?php if (!empty($rev['review_title'])): ?>
-                <!-- VULNERABILITY: Stored XSS - Review title rendered without sanitization -->
-                <h5 class="review-card-title"><?php echo $rev['review_title']; ?></h5>
+                <!-- SECURE: Escaped review title -->
+                <h5 class="review-card-title"><?php echo htmlspecialchars($rev['review_title'], ENT_QUOTES, 'UTF-8'); ?></h5>
               <?php endif; ?>
 
-              <!-- VULNERABILITY: Stored XSS - Review text rendered without sanitization -->
-              <p class="review-card-text"><?php echo nl2br($rev['review_text']); ?></p>
+              <!-- SECURE: Escaped review text -->
+              <p class="review-card-text"><?php echo nl2br(htmlspecialchars($rev['review_text'], ENT_QUOTES, 'UTF-8')); ?></p>
             </div>
           <?php endforeach; ?>
         <?php else: ?>

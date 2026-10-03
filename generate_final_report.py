@@ -45,8 +45,8 @@ def generate_report():
     <b>Scope:</b> Full codebase review focusing on XSS, SQLi, Brute-Force, and related vulnerabilities.<br/>
     <b>Technologies identified:</b> PHP, MySQL/MariaDB (via XAMPP), HTML, JS.<br/>
     <b>Security areas reviewed:</b> Authentication, Authorization, Database access, Input handling, Output encoding, Session management.<br/>
-    <b>Number of vulnerabilities found:</b> 6<br/>
-    <b>Number of vulnerabilities fixed:</b> 6<br/>
+    <b>Number of vulnerabilities found:</b> 8<br/>
+    <b>Number of vulnerabilities fixed:</b> 8<br/>
     <b>Number of issues requiring further review:</b> 0<br/>
     """
     story.append(Paragraph(exec_summary, normal_style))
@@ -73,7 +73,9 @@ def generate_report():
         ['SEC-003', 'SQLi & Weak Cookie', 'High', 'admin/login_handler.php', '14, 44-45', 'Fixed'],
         ['SEC-004', 'Brute Force Attack', 'High', 'includes/security.php', '11-15', 'Fixed'],
         ['SEC-005', 'Stored XSS', 'High', 'components/auth_modal.php', '111', 'Fixed'],
-        ['SEC-006', 'SQL Injection', 'Critical', 'pages/contact-us.php', '66', 'Fixed']
+        ['SEC-006', 'SQL Injection', 'Critical', 'pages/contact-us.php', '66', 'Fixed'],
+        ['SEC-007', 'Stored XSS', 'High', 'ProductView.php', '1668, 1672', 'Fixed'],
+        ['SEC-008', 'Stored XSS', 'High', 'admin/messages_vulnerable.php', '80-98', 'Fixed']
     ]
     
     table = Table(data)
@@ -102,8 +104,8 @@ def generate_report():
             "new_line": "28-36",
             "vuln_code": "$sql = \"SELECT * FROM users WHERE email = '$email' AND password = '$password'\";\n$success = $mysqli->multi_query($sql);",
             "explanation": "User input is directly concatenated into a SQL string. multi_query allows stacked queries.",
-            "impact": "Attackers can bypass authentication completely using payloads like ' OR '1'='1.",
-            "mitigation": "Replaced direct concatenation with parameterized queries ($mysqli->prepare). Migrated from plain-text checking to password_verify(). Added session_regenerate_id(true).",
+            "impact": "Attackers can bypass authentication completely using payloads like ' OR '1'='1. For example, before they could use \"jedmalonzo8@gmail.com'; DELETE FROM users; --\" to maliciously delete users.",
+            "mitigation": "Replaced direct concatenation with parameterized queries ($mysqli->prepare). Migrated from plain-text checking to password_verify(). Added session_regenerate_id(true). Now it is secure against such attacks.",
             "fixed_code": "$stmt = $mysqli->prepare(\"SELECT * FROM users WHERE email = ?\");\n$stmt->bind_param(\"s\", $email);\n$stmt->execute();\n$result = $stmt->get_result();\n// ...\nif (password_verify($password, $user['password'])) { session_regenerate_id(true); }"
         },
         {
@@ -118,6 +120,19 @@ def generate_report():
             "impact": "Full database compromise via SQLi. A database breach exposes all user passwords instantly.",
             "mitigation": "Used $conn->prepare() for both SELECT and INSERT. Used password_hash() for secure password storage.",
             "fixed_code": "$hashed_password = password_hash($password, PASSWORD_DEFAULT);\n$insert_stmt = $conn->prepare(\"INSERT INTO users (username, email, password, role, status) VALUES (?, ?, ?, 'User', 'Active')\");\n$insert_stmt->bind_param(\"sss\", $full_name, $email, $hashed_password);"
+        },
+        {
+            "id": "SEC-003",
+            "type": "SQL Injection & Weak Session Cookie",
+            "severity": "High",
+            "file": "admin/login_handler.php",
+            "orig_line": "14, 44-45",
+            "new_line": "14-16, 47-51",
+            "vuln_code": "$query = \"SELECT * FROM admins WHERE email = '$email' LIMIT 1\";\n// ...\nsetcookie('admin_remember', base64_encode($admin['email']), time() + (30 * 24 * 60 * 60), '/');",
+            "explanation": "Admin login directly concatenates user input. The 'remember me' cookie only uses base64 encoding without signature verification.",
+            "impact": "Attackers can bypass admin authentication via SQLi or trivially forge the remember-me cookie by base64 encoding any email.",
+            "mitigation": "Replaced query with prepared statements. Secured the cookie by appending an HMAC-SHA256 cryptographic signature.",
+            "fixed_code": "$stmt = $conn->prepare(\"SELECT * FROM admins WHERE email = ? LIMIT 1\");\n$stmt->bind_param(\"s\", $email);\n// ...\n$cookie_data = $admin['email'] . '|' . hash_hmac('sha256', $admin['email'], $secret);\nsetcookie('admin_remember', $cookie_data, time() + (30 * 24 * 60 * 60), '/');"
         },
         {
             "id": "SEC-004",
@@ -144,6 +159,45 @@ def generate_report():
             "impact": "Malicious URIs can inject arbitrary HTML/JS, allowing session theft.",
             "mitigation": "Added htmlspecialchars() with ENT_QUOTES and UTF-8 encoding.",
             "fixed_code": "echo '<img src=\"' . htmlspecialchars($imagePath, ENT_QUOTES, 'UTF-8') . '\" alt=\"Adventure awaits in the wilderness\" class=\"modal-hero-image\">';"
+        },
+        {
+            "id": "SEC-006",
+            "type": "SQL Injection",
+            "severity": "Critical",
+            "file": "pages/contact-us.php",
+            "orig_line": "66",
+            "new_line": "66-67",
+            "vuln_code": "$sql = \"INSERT INTO contact_messages (name, email, phone, subject, message, ip_address, user_agent) VALUES ('$name', '$email', '$phone', '$subject', '$message', '$ip', '$user_agent')\";\nif ($conn->query($sql) === TRUE) {",
+            "explanation": "Multiple user-supplied fields in the contact form are directly concatenated into the INSERT query.",
+            "impact": "An attacker can manipulate the query structure to insert malicious data, exfiltrate data, or execute arbitrary database commands.",
+            "mitigation": "Implemented parameterized queries ($conn->prepare) to safely bind all 7 user inputs.",
+            "fixed_code": "$stmt = $conn->prepare(\"INSERT INTO contact_messages (name, email, phone, subject, message, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)\");\n$stmt->bind_param(\"sssssss\", $name, $email, $phone, $subject, $message, $ip, $user_agent);\nif ($stmt->execute()) {"
+        },
+        {
+            "id": "SEC-007",
+            "type": "Stored XSS",
+            "severity": "High",
+            "file": "ProductView.php",
+            "orig_line": "1668, 1672",
+            "new_line": "1668, 1672",
+            "vuln_code": "<h5 class=\"review-card-title\"><?php echo $rev['review_title']; ?></h5>\n<p class=\"review-card-text\"><?php echo nl2br($rev['review_text']); ?></p>",
+            "explanation": "User-submitted product review titles and text were rendered directly to the DOM without HTML encoding.",
+            "impact": "Stored XSS. An attacker can leave a malicious review containing JavaScript that executes in the browser of any user (or admin) who views the product page.",
+            "mitigation": "Wrapped the review output variables in htmlspecialchars() to properly encode the content.",
+            "fixed_code": "<h5 class=\"review-card-title\"><?php echo htmlspecialchars($rev['review_title'], ENT_QUOTES, 'UTF-8'); ?></h5>\n<p class=\"review-card-text\"><?php echo nl2br(htmlspecialchars($rev['review_text'], ENT_QUOTES, 'UTF-8')); ?></p>"
+        },
+        {
+            "id": "SEC-008",
+            "type": "Stored XSS",
+            "severity": "High",
+            "file": "admin/messages_vulnerable.php",
+            "orig_line": "80-98",
+            "new_line": "80-98",
+            "vuln_code": "<?php echo $msg['name']; ?>\n<?php echo $msg['email']; ?>\n<?php echo $msg['subject']; ?>\n<?php echo $msg['message']; ?>",
+            "explanation": "User-submitted contact form messages (name, email, subject, message) were rendered directly in the admin panel without encoding.",
+            "impact": "Stored XSS. Attackers can submit malicious payloads via the contact form that will execute in the browser of any admin viewing the messages.",
+            "mitigation": "Wrapped all user-supplied output variables in htmlspecialchars() with ENT_QUOTES.",
+            "fixed_code": "<?php echo htmlspecialchars($msg['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>\n<?php echo nl2br(htmlspecialchars($msg['message'] ?? '', ENT_QUOTES, 'UTF-8')); ?>"
         }
     ]
     
@@ -170,6 +224,8 @@ def generate_report():
     <ul>
         <li><code>components/auth_modal.php</code> &rarr; Line 111 &rarr; Added htmlspecialchars(). Reason: Prevents XSS via malicious URIs injecting HTML into the hero image src attribute.</li>
         <li><code>admin/search_vulnerable.php</code> &rarr; Lines 43, 46, 52 &rarr; Added htmlspecialchars($_GET['q']). Reason: Prevents Reflected XSS from search input.</li>
+        <li><code>ProductView.php</code> &rarr; Lines 1668, 1672 &rarr; Added htmlspecialchars(). Reason: Prevents Stored XSS in user reviews.</li>
+        <li><code>admin/messages_vulnerable.php</code> &rarr; Lines 80-98 &rarr; Added htmlspecialchars(). Reason: Prevents Stored XSS in admin panel when viewing user contact messages.</li>
     </ul>
     """
     story.append(Paragraph(xss_text, normal_style))

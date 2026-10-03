@@ -30,6 +30,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if ($remember_me) {
                 // SECURE: Use cryptographically signed cookie
                 $secret = "PEAKPH_SUPER_SECRET_KEY";
+                $cookie_data = $admin['email'] . '|' . hash_hmac('sha256', $admin['email'], $secret);
                 setcookie('admin_remember', $cookie_data, time() + (30 * 24 * 60 * 60), '/');
             }
 

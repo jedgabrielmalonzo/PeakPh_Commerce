@@ -77,24 +77,24 @@ $conn->close();
                         <tr>
                             <td><?php echo $msg['id']; ?></td>
                             
-                            <!-- VULNERABILITY: Name displayed WITHOUT escaping -->
+                            <!-- SECURE: Name displayed WITH escaping -->
                             <td class="message-content">
-                                <?php echo $msg['name']; ?>
+                                <?php echo htmlspecialchars($msg['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                             </td>
                             
-                            <!-- VULNERABILITY: Email displayed WITHOUT escaping -->
+                            <!-- SECURE: Email displayed WITH escaping -->
                             <td class="message-content">
-                                <?php echo $msg['email']; ?>
+                                <?php echo htmlspecialchars($msg['email'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                             </td>
                             
-                            <!-- VULNERABILITY: Subject displayed WITHOUT escaping -->
+                            <!-- SECURE: Subject displayed WITH escaping -->
                             <td class="message-content">
-                                <?php echo $msg['subject']; ?>
+                                <?php echo htmlspecialchars($msg['subject'] ?? '', ENT_QUOTES, 'UTF-8'); ?>
                             </td>
                             
-                            <!-- VULNERABILITY: Message displayed WITHOUT escaping (CRITICAL for long text) -->
+                            <!-- SECURE: Message displayed WITH escaping -->
                             <td class="message-content">
-                                <?php echo $msg['message']; ?>
+                                <?php echo nl2br(htmlspecialchars($msg['message'] ?? '', ENT_QUOTES, 'UTF-8')); ?>
                             </td>
                             
                             <td><?php echo $msg['ip_address']; ?></td>

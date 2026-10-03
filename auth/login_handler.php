@@ -6,6 +6,7 @@ error_reporting(E_ALL);
 
 session_start();
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/security.php';
 $mysqli = $conn;
 
 // Check if this is an AJAX/Fetch request from the modal
@@ -24,6 +25,32 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $input = json_decode(file_get_contents('php://input'), true) ?: $_POST;
     $email = $input["email"] ?? "";
     $password = $input["password"] ?? "";
+
+    // Apply Rate Limiting
+    $ip_address = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    if (!checkRateLimit('login', $ip_address, 5, 300)) {
+        $error_message = "Too many login attempts. Please try again in 5 minutes.";
+        if ($isAjax) {
+            http_response_code(429);
+            echo json_encode(['success' => false, 'message' => $error_message]);
+            exit;
+        } else {
+            header("Location: ../index.php?login=failed&error=" . urlencode($error_message));
+            exit;
+        }
+    }
+
+    // Check for DB connection before proceeding
+    if ($mysqli === null) {
+        $error_message = "Database connection failed. Please try again later.";
+        if ($isAjax) {
+            echo json_encode(['success' => false, 'message' => $error_message]);
+            exit;
+        } else {
+            header("Location: ../index.php?login=failed&error=" . urlencode($error_message));
+            exit;
+        }
+    }
 
     // SECURE: Use prepared statements and password_verify
     $stmt = $mysqli->prepare("SELECT * FROM users WHERE email = ?");

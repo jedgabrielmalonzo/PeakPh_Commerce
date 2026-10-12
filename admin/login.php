@@ -55,6 +55,13 @@
                     </div>
                 <?php endif; ?>
                 
+                <?php if (isset($_GET['login']) && $_GET['login'] === 'rate_limited'): ?>
+                    <div class="error-message">
+                        <i class="bi bi-shield-x"></i>
+                        <span>Too many login attempts. Account temporarily locked for 15 minutes.</span>
+                    </div>
+                <?php endif; ?>
+                
                 <?php if (isset($_GET['logout']) && $_GET['logout'] === 'success'): ?>
                     <div class="success-message">
                         <i class="bi bi-check-circle"></i>

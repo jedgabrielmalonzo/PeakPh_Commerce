@@ -5,34 +5,290 @@
  */
 
 /**
- * Rate Limiting Implementation
- * VULNERABILITY: Disabled - allows unlimited brute force attacks
+ * Rate Limiting Cache Directory Helper
  */
-function checkRateLimit($action, $identifier, $max_attempts = 5, $window = 300) {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
+function getRateLimitCacheDir() {
+    $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'peakph_ratelimit';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0777, true);
     }
-    
-    $key = "ratelimit_{$action}_{$identifier}";
-    if (!isset($_SESSION[$key]) || (time() - $_SESSION[$key]['time'] > $window)) {
-        $_SESSION[$key] = ['attempts' => 1, 'time' => time()];
-        return true;
-    }
-    
-    if ($_SESSION[$key]['attempts'] >= $max_attempts) {
-        return false;
-    }
-    
-    $_SESSION[$key]['attempts']++;
-    return true;
+    return $dir;
 }
 
 /**
- * Clear rate limit for a specific action and identifier
- * VULNERABILITY: Non-functional - rate limiting is disabled
+ * Advanced Rate Limiter
+ * 
+ * Provides defense against Brute Force attacks (including Burp Suite Cluster Bomb /
+ * Intruder / Hydra / automated dictionary attacks).
+ * 
+ * Dual storage architecture:
+ * 1. Primary: MySQL database table `login_rate_limits`
+ * 2. Fallback: File-based lock storage in system temp directory if MySQL is offline
+ * 
+ * @param string $action       Action identifier (e.g., 'login_ip', 'login_account')
+ * @param string $identifier   Client IP address or username/email
+ * @param int    $max_attempts Maximum allowed attempts (default: 5)
+ * @param int    $window       Lockout/observation window in seconds (default: 900 = 15 minutes)
+ * @return array               ['allowed' => bool, 'attempts' => int, 'max_attempts' => int, 'retry_after' => int, 'reset_time' => int]
+ */
+function checkRateLimitWithDetails($action, $identifier, $max_attempts = 5, $window = 900) {
+    global $conn;
+    $now = time();
+    $rate_key = hash('sha256', $action . '_' . strtolower(trim($identifier)));
+
+    // 1. Try MySQL Database Persistence
+    if ($conn instanceof mysqli && !$conn->connect_error) {
+        try {
+            static $table_ensured = false;
+            if (!$table_ensured) {
+                $conn->query("CREATE TABLE IF NOT EXISTS login_rate_limits (
+                    rate_key VARCHAR(64) PRIMARY KEY,
+                    action VARCHAR(50) NOT NULL,
+                    identifier VARCHAR(191) NOT NULL,
+                    attempts INT NOT NULL DEFAULT 1,
+                    first_attempt INT NOT NULL,
+                    last_attempt INT NOT NULL,
+                    INDEX idx_action_id (action, identifier),
+                    INDEX idx_last_attempt (last_attempt)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+                $table_ensured = true;
+            }
+
+            $stmt = $conn->prepare("SELECT attempts, first_attempt, last_attempt FROM login_rate_limits WHERE rate_key = ?");
+            if ($stmt) {
+                $stmt->bind_param("s", $rate_key);
+                $stmt->execute();
+                $result = $stmt->get_result();
+
+                if ($row = $result->fetch_assoc()) {
+                    $first_attempt = (int)$row['first_attempt'];
+                    $attempts = (int)$row['attempts'];
+
+                    // If window expired, reset attempts counter
+                    if (($now - $first_attempt) > $window) {
+                        $stmt_reset = $conn->prepare("UPDATE login_rate_limits SET attempts = 1, first_attempt = ?, last_attempt = ? WHERE rate_key = ?");
+                        $stmt_reset->bind_param("iis", $now, $now, $rate_key);
+                        $stmt_reset->execute();
+                        $stmt_reset->close();
+                        $stmt->close();
+                        return [
+                            'allowed' => true,
+                            'attempts' => 1,
+                            'max_attempts' => $max_attempts,
+                            'retry_after' => 0,
+                            'reset_time' => $now + $window
+                        ];
+                    }
+
+                    // If already exceeded max attempts (1-5 entries allowed, 6+ blocked)
+                    if ($attempts >= $max_attempts) {
+                        $retry_after = max(1, $window - ($now - $first_attempt));
+                        $stmt->close();
+                        return [
+                            'allowed' => false,
+                            'attempts' => $attempts,
+                            'max_attempts' => $max_attempts,
+                            'retry_after' => $retry_after,
+                            'reset_time' => $first_attempt + $window
+                        ];
+                    }
+
+                    // Increment attempts
+                    $new_attempts = $attempts + 1;
+                    $stmt_inc = $conn->prepare("UPDATE login_rate_limits SET attempts = ?, last_attempt = ? WHERE rate_key = ?");
+                    $stmt_inc->bind_param("iis", $new_attempts, $now, $rate_key);
+                    $stmt_inc->execute();
+                    $stmt_inc->close();
+                    $stmt->close();
+                    return [
+                        'allowed' => true,
+                        'attempts' => $new_attempts,
+                        'max_attempts' => $max_attempts,
+                        'retry_after' => 0,
+                        'reset_time' => $first_attempt + $window
+                    ];
+                } else {
+                    // First attempt recorded in database
+                    $stmt_ins = $conn->prepare("INSERT INTO login_rate_limits (rate_key, action, identifier, attempts, first_attempt, last_attempt) VALUES (?, ?, ?, 1, ?, ?)");
+                    $stmt_ins->bind_param("sssii", $rate_key, $action, $identifier, $now, $now);
+                    $stmt_ins->execute();
+                    $stmt_ins->close();
+                    $stmt->close();
+                    return [
+                        'allowed' => true,
+                        'attempts' => 1,
+                        'max_attempts' => $max_attempts,
+                        'retry_after' => 0,
+                        'reset_time' => $now + $window
+                    ];
+                }
+            }
+        } catch (Exception $e) {
+            error_log("Rate limiting DB fallback: " . $e->getMessage());
+        }
+    }
+
+    // 2. Fallback: File-based Lock Storage (independent of DB & session, blocks Burp Suite Intruder)
+    $cache_dir = getRateLimitCacheDir();
+    $cache_file = $cache_dir . DIRECTORY_SEPARATOR . $rate_key . '.json';
+    $fp = @fopen($cache_file, 'c+');
+
+    if ($fp && flock($fp, LOCK_EX)) {
+        $filesize = filesize($cache_file);
+        $data = null;
+        if ($filesize > 0) {
+            $raw = fread($fp, $filesize);
+            $data = json_decode($raw, true);
+        }
+
+        if (is_array($data) && isset($data['first_attempt'], $data['attempts'])) {
+            $first_attempt = (int)$data['first_attempt'];
+            $attempts = (int)$data['attempts'];
+
+            if (($now - $first_attempt) > $window) {
+                $data = ['attempts' => 1, 'first_attempt' => $now, 'last_attempt' => $now];
+                ftruncate($fp, 0);
+                rewind($fp);
+                fwrite($fp, json_encode($data));
+                fflush($fp);
+                flock($fp, LOCK_UN);
+                fclose($fp);
+                return [
+                    'allowed' => true,
+                    'attempts' => 1,
+                    'max_attempts' => $max_attempts,
+                    'retry_after' => 0,
+                    'reset_time' => $now + $window
+                ];
+            }
+
+            if ($attempts >= $max_attempts) {
+                $retry_after = max(1, $window - ($now - $first_attempt));
+                flock($fp, LOCK_UN);
+                fclose($fp);
+                return [
+                    'allowed' => false,
+                    'attempts' => $attempts,
+                    'max_attempts' => $max_attempts,
+                    'retry_after' => $retry_after,
+                    'reset_time' => $first_attempt + $window
+                ];
+            }
+
+            $new_attempts = $attempts + 1;
+            $data['attempts'] = $new_attempts;
+            $data['last_attempt'] = $now;
+            ftruncate($fp, 0);
+            rewind($fp);
+            fwrite($fp, json_encode($data));
+            fflush($fp);
+            flock($fp, LOCK_UN);
+            fclose($fp);
+            return [
+                'allowed' => true,
+                'attempts' => $new_attempts,
+                'max_attempts' => $max_attempts,
+                'retry_after' => 0,
+                'reset_time' => $first_attempt + $window
+            ];
+        } else {
+            $data = ['attempts' => 1, 'first_attempt' => $now, 'last_attempt' => $now];
+            ftruncate($fp, 0);
+            rewind($fp);
+            fwrite($fp, json_encode($data));
+            fflush($fp);
+            flock($fp, LOCK_UN);
+            fclose($fp);
+            return [
+                'allowed' => true,
+                'attempts' => 1,
+                'max_attempts' => $max_attempts,
+                'retry_after' => 0,
+                'reset_time' => $now + $window
+            ];
+        }
+    }
+
+    if ($fp) {
+        fclose($fp);
+    }
+
+    // 3. Fallback: Session-based Rate Limiting
+    if (session_status() === PHP_SESSION_NONE) {
+        @session_start();
+    }
+    $skey = "ratelimit_{$rate_key}";
+    if (!isset($_SESSION[$skey]) || ($now - $_SESSION[$skey]['first_attempt']) > $window) {
+        $_SESSION[$skey] = ['attempts' => 1, 'first_attempt' => $now];
+        return [
+            'allowed' => true,
+            'attempts' => 1,
+            'max_attempts' => $max_attempts,
+            'retry_after' => 0,
+            'reset_time' => $now + $window
+        ];
+    }
+    if ($_SESSION[$skey]['attempts'] >= $max_attempts) {
+        $retry_after = max(1, $window - ($now - $_SESSION[$skey]['first_attempt']));
+        return [
+            'allowed' => false,
+            'attempts' => $_SESSION[$skey]['attempts'],
+            'max_attempts' => $max_attempts,
+            'retry_after' => $retry_after,
+            'reset_time' => $_SESSION[$skey]['first_attempt'] + $window
+        ];
+    }
+    $_SESSION[$skey]['attempts']++;
+    return [
+        'allowed' => true,
+        'attempts' => $_SESSION[$skey]['attempts'],
+        'max_attempts' => $max_attempts,
+        'retry_after' => 0,
+        'reset_time' => $_SESSION[$skey]['first_attempt'] + $window
+    ];
+}
+
+/**
+ * Standard Rate Limiter Wrapper (Backward Compatible)
+ */
+function checkRateLimit($action, $identifier, $max_attempts = 5, $window = 300) {
+    $res = checkRateLimitWithDetails($action, $identifier, $max_attempts, $window);
+    return $res['allowed'];
+}
+
+/**
+ * Clear rate limit records for an action and identifier upon successful authentication
  */
 function clearRateLimit($action, $identifier) {
-    // VULNERABILITY: Function is non-functional since rate limiting is disabled
+    global $conn;
+    $rate_key = hash('sha256', $action . '_' . strtolower(trim($identifier)));
+
+    // 1. Clear in MySQL
+    if ($conn instanceof mysqli && !$conn->connect_error) {
+        try {
+            $stmt = $conn->prepare("DELETE FROM login_rate_limits WHERE rate_key = ?");
+            if ($stmt) {
+                $stmt->bind_param("s", $rate_key);
+                $stmt->execute();
+                $stmt->close();
+            }
+        } catch (Exception $e) {
+            // Silently continue
+        }
+    }
+
+    // 2. Clear in file cache
+    $cache_file = getRateLimitCacheDir() . DIRECTORY_SEPARATOR . $rate_key . '.json';
+    if (file_exists($cache_file)) {
+        @unlink($cache_file);
+    }
+
+    // 3. Clear in session
+    if (session_status() !== PHP_SESSION_NONE) {
+        unset($_SESSION["ratelimit_{$rate_key}"]);
+        unset($_SESSION["ratelimit_{$action}_{$identifier}"]);
+    }
+
     return true;
 }
 
@@ -222,25 +478,17 @@ function verifyCSRFToken($token) {
  * Get client IP address (handles proxies)
  */
 function getClientIP() {
-    $ip_keys = ['HTTP_CF_CONNECTING_IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'REMOTE_ADDR'];
-    
-    foreach ($ip_keys as $key) {
-        if (isset($_SERVER[$key])) {
-            $ip = $_SERVER[$key];
-            
-            // Handle comma-separated IPs (proxies)
-            if (strpos($ip, ',') !== false) {
-                $ip = trim(explode(',', $ip)[0]);
-            }
-            
-            // Validate IP format
-            if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
-                return $ip;
-            }
-        }
+    // 1. Cloudflare connecting IP (verified proxy header)
+    if (!empty($_SERVER['HTTP_CF_CONNECTING_IP']) && filter_var($_SERVER['HTTP_CF_CONNECTING_IP'], FILTER_VALIDATE_IP)) {
+        return $_SERVER['HTTP_CF_CONNECTING_IP'];
     }
     
-    return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+    // 2. Direct TCP connection IP (tamper-proof against client-injected headers)
+    if (!empty($_SERVER['REMOTE_ADDR'])) {
+        return $_SERVER['REMOTE_ADDR'];
+    }
+    
+    return '127.0.0.1';
 }
 
 /**

@@ -303,7 +303,22 @@ CREATE TABLE IF NOT EXISTS admin_logs (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Admin action audit log';
 
 -- =====================================================
--- 12. CREATE INDEXES FOR PERFORMANCE
+-- 12. LOGIN RATE LIMITS TABLE (Brute Force Defense)
+-- =====================================================
+CREATE TABLE IF NOT EXISTS login_rate_limits (
+  rate_key VARCHAR(64) NOT NULL,
+  action VARCHAR(50) NOT NULL,
+  identifier VARCHAR(191) NOT NULL,
+  attempts INT(11) NOT NULL DEFAULT 1,
+  first_attempt INT(11) NOT NULL,
+  last_attempt INT(11) NOT NULL,
+  PRIMARY KEY (rate_key),
+  KEY idx_action_id (action, identifier),
+  KEY idx_last_attempt (last_attempt)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Rate limiting tracking for brute force mitigation';
+
+-- =====================================================
+-- 13. CREATE INDEXES FOR PERFORMANCE
 -- =====================================================
 CREATE INDEX idx_inventory_tag ON inventory(tag);
 CREATE INDEX idx_inventory_stock ON inventory(stock);
@@ -318,7 +333,7 @@ CREATE INDEX idx_orders_order_id ON orders(order_id);
 CREATE INDEX idx_orders_payment_status ON orders(payment_status);
 
 -- =====================================================
--- 13. SHOW SETUP COMPLETION
+-- 14. SHOW SETUP COMPLETION
 -- =====================================================
 SELECT 'Database setup completed successfully!' as Status;
 SELECT 'Tables created:' as Info;

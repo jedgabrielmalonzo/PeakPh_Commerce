@@ -37,6 +37,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if ($isAjax) {
             echo json_encode(['success' => false, 'message' => $error_message]);
             exit;
+        } else {
+            header("Location: ../index.php?login=failed");
+            exit;
         }
     } else {
         // Get the result from the first query
@@ -81,8 +84,15 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if ($isAjax) {
                 echo json_encode(['success' => false, 'message' => $error_message]);
                 exit;
+            } else {
+                header("Location: ../index.php?login=failed");
+                exit;
             }
         }
     }
+} else {
+    // Not a POST request — redirect to homepage
+    header("Location: ../index.php");
+    exit;
 }
 ?>
